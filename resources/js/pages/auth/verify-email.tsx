@@ -8,7 +8,8 @@ import { send } from '@/routes/verification';
 
 export default function VerifyEmail({ status }: { status?: string }) {
     return (
-        <>
+        <div className="min-h-screen flex items-center justify-center bg-[#F0F4FF] dark:bg-slate-950 p-6">
+            <div className="w-full max-w-sm">
             <Head title="Email verification" />
 
             {status === 'verification-link-sent' && (
@@ -35,7 +36,8 @@ export default function VerifyEmail({ status }: { status?: string }) {
                     </>
                 )}
             </Form>
-        </>
+            </div>
+        </div>
     );
 }
 

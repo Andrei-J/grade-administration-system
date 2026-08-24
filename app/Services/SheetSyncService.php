@@ -27,7 +27,8 @@ class SheetSyncService
         protected AuditLogRepository $auditRepo,
         protected SyncLogRepository $syncLogRepo,
         protected UserRepository $userRepo,
-        protected GradeService $gradeService
+        protected GradeService $gradeService,
+        protected LocalExcelSheetService $localExcelSheets
     ) {}
 
     public function pullFromGoogle(?int $userId = null): array
@@ -116,6 +117,23 @@ class SheetSyncService
         ];
 
         if (!$this->googleSheets->isConfigured()) {
+            if ($this->localExcelSheets->isLocalSheetActive()) {
+                $this->localExcelSheets->generateLocalExcelFile();
+                $this->syncLogRepo->create([
+                    'user_id' => $userId ? (string)$userId : null,
+                    'direction' => 'LOCAL_TO_EXCEL',
+                    'action' => 'LOCAL_EXCEL_SYNC',
+                    'status' => 'Success',
+                    'details' => 'Local Excel sheet (.xlsx) generated successfully (Offline fallback mode).',
+                ]);
+
+                return [
+                    'success' => true,
+                    'message' => 'Online Google Sheets unavailable. Saved to local Excel sheet (.xlsx) at storage/app/sheets/',
+                    'summary' => $summary,
+                ];
+            }
+
             $summary['Failed']++;
             $this->syncLogRepo->create([
                 'user_id' => $userId ? (string)$userId : null,
@@ -150,6 +168,10 @@ class SheetSyncService
             // Push Audit Logs
             $this->pushAuditLogs($summary);
 
+            if ($this->localExcelSheets->isLocalSheetActive()) {
+                $this->localExcelSheets->generateLocalExcelFile();
+            }
+
             $this->syncLogRepo->create([
                 'user_id' => $userId ? (string)$userId : null,
                 'direction' => 'LOCAL_TO_GOOGLE',
@@ -166,6 +188,11 @@ class SheetSyncService
             ];
         } catch (Exception $e) {
             Log::error('Push to Google Sheets failed: ' . $e->getMessage());
+
+            if ($this->localExcelSheets->isLocalSheetActive()) {
+                $this->localExcelSheets->generateLocalExcelFile();
+            }
+
             $summary['Failed']++;
 
             $this->syncLogRepo->create([
@@ -203,6 +230,42 @@ class SheetSyncService
             'message' => 'Bi-directional synchronization complete.',
             'summary' => $combinedSummary,
         ];
+    }
+
+    /**
+     * Push a single table to Google Sheets by name.
+     * Called by SyncTableToSheetsJob — routes to the correct push handler.
+     */
+    public function pushTable(string $table, array &$summary = []): void
+    {
+        if (empty($summary)) {
+            $summary = ['Uploaded' => 0, 'Updated' => 0, 'Failed' => 0];
+        }
+
+        match ($table) {
+            'students'    => $this->pushStudents($summary),
+            'instructors' => $this->pushInstructors($summary),
+            'subjects'    => $this->pushSubjects($summary),
+            'sections'    => $this->pushSections($summary),
+            'assignments' => $this->pushAssignments($summary),
+            'grades'      => $this->pushGrades($summary),
+            'audit_logs'  => $this->pushAuditLogs($summary),
+            'users'       => $this->pushUsers($summary),
+            default       => Log::warning("pushTable(): unknown table '{$table}'"),
+        };
+
+        if ($this->localExcelSheets->isLocalSheetActive()) {
+            $this->localExcelSheets->generateLocalExcelFile();
+        }
+    }
+
+    /**
+     * Push ALL tables to Google Sheets in sequence.
+     * Called once after credentials are first saved to do a full initial sync.
+     */
+    public function pushAllTables(?int $userId = null): array
+    {
+        return $this->pushToGoogle($userId);
     }
 
     /* ---- Tab Pull Handlers ---- */
@@ -483,14 +546,14 @@ class SheetSyncService
 
     protected function pushStudents(array &$summary): void
     {
-        $pending = $this->studentRepo->getPendingSync();
-        if ($pending->isEmpty()) return;
+        $all = $this->studentRepo->getAll();
+        if ($all->isEmpty()) return;
 
         $rows = [
             ['id', 'student_id', 'name', 'grade_level', 'section_id', 'school_year', 'status', 'created_at', 'updated_at']
         ];
 
-        foreach ($this->studentRepo->getAll() as $st) {
+        foreach ($all as $st) {
             $rows[] = [
                 (string)$st->id,
                 $st->student_id,
@@ -505,7 +568,7 @@ class SheetSyncService
         }
 
         $this->googleSheets->writeTabValues('students', $rows);
-        foreach ($pending as $st) {
+        foreach ($all as $st) {
             $this->studentRepo->markSynced($st);
             $summary['Uploaded']++;
         }
@@ -513,14 +576,14 @@ class SheetSyncService
 
     protected function pushInstructors(array &$summary): void
     {
-        $pending = $this->instructorRepo->getPendingSync();
-        if ($pending->isEmpty()) return;
+        $all = $this->instructorRepo->getAll();
+        if ($all->isEmpty()) return;
 
         $rows = [
             ['id', 'instructor_id', 'name', 'email', 'status', 'created_at', 'updated_at']
         ];
 
-        foreach ($this->instructorRepo->getAll() as $inst) {
+        foreach ($all as $inst) {
             $rows[] = [
                 (string)$inst->id,
                 $inst->instructor_id,
@@ -533,7 +596,7 @@ class SheetSyncService
         }
 
         $this->googleSheets->writeTabValues('instructors', $rows);
-        foreach ($pending as $inst) {
+        foreach ($all as $inst) {
             $this->instructorRepo->markSynced($inst);
             $summary['Uploaded']++;
         }
@@ -541,14 +604,14 @@ class SheetSyncService
 
     protected function pushSubjects(array &$summary): void
     {
-        $pending = $this->subjectRepo->getPendingSync();
-        if ($pending->isEmpty()) return;
+        $all = $this->subjectRepo->getAll();
+        if ($all->isEmpty()) return;
 
         $rows = [
             ['id', 'subject_code', 'subject_name', 'description', 'status']
         ];
 
-        foreach ($this->subjectRepo->getAll() as $sub) {
+        foreach ($all as $sub) {
             $rows[] = [
                 (string)$sub->id,
                 $sub->subject_code,
@@ -559,7 +622,7 @@ class SheetSyncService
         }
 
         $this->googleSheets->writeTabValues('subjects', $rows);
-        foreach ($pending as $sub) {
+        foreach ($all as $sub) {
             $this->subjectRepo->markSynced($sub);
             $summary['Uploaded']++;
         }
@@ -567,14 +630,14 @@ class SheetSyncService
 
     protected function pushSections(array &$summary): void
     {
-        $pending = $this->sectionRepo->getPendingSync();
-        if ($pending->isEmpty()) return;
+        $all = $this->sectionRepo->getAll();
+        if ($all->isEmpty()) return;
 
         $rows = [
             ['id', 'grade_level', 'section_name', 'school_year', 'status']
         ];
 
-        foreach ($this->sectionRepo->getAll() as $sec) {
+        foreach ($all as $sec) {
             $rows[] = [
                 (string)$sec->id,
                 $sec->grade_level,
@@ -585,7 +648,7 @@ class SheetSyncService
         }
 
         $this->googleSheets->writeTabValues('sections', $rows);
-        foreach ($pending as $sec) {
+        foreach ($all as $sec) {
             $this->sectionRepo->markSynced($sec);
             $summary['Uploaded']++;
         }
@@ -593,14 +656,14 @@ class SheetSyncService
 
     protected function pushAssignments(array &$summary): void
     {
-        $pending = $this->assignmentRepo->getPendingSync();
-        if ($pending->isEmpty()) return;
+        $all = $this->assignmentRepo->getAll();
+        if ($all->isEmpty()) return;
 
         $rows = [
             ['id', 'instructor_id', 'subject_id', 'section_id', 'school_year', 'status', 'created_at']
         ];
 
-        foreach ($this->assignmentRepo->getAll() as $asgn) {
+        foreach ($all as $asgn) {
             $rows[] = [
                 (string)$asgn->id,
                 $asgn->instructor_id,
@@ -613,7 +676,7 @@ class SheetSyncService
         }
 
         $this->googleSheets->writeTabValues('assignments', $rows);
-        foreach ($pending as $asgn) {
+        foreach ($all as $asgn) {
             $this->assignmentRepo->markSynced($asgn);
             $summary['Uploaded']++;
         }
@@ -621,14 +684,14 @@ class SheetSyncService
 
     protected function pushGrades(array &$summary): void
     {
-        $pending = $this->gradeRepo->getPendingSync();
-        if ($pending->isEmpty()) return;
+        $all = $this->gradeRepo->getAll();
+        if ($all->isEmpty()) return;
 
         $rows = [
             ['id', 'student_id', 'subject_id', 'instructor_id', 'section_id', 'school_year', 'prelim', 'midterm', 'final', 'final_average', 'status', 'created_at', 'updated_at']
         ];
 
-        foreach ($this->gradeRepo->getAll() as $grd) {
+        foreach ($all as $grd) {
             $rows[] = [
                 (string)$grd->id,
                 $grd->student_id,
@@ -647,7 +710,7 @@ class SheetSyncService
         }
 
         $this->googleSheets->writeTabValues('grades', $rows);
-        foreach ($pending as $grd) {
+        foreach ($all as $grd) {
             $this->gradeRepo->markSynced($grd);
             $summary['Uploaded']++;
         }
@@ -655,14 +718,14 @@ class SheetSyncService
 
     protected function pushAuditLogs(array &$summary): void
     {
-        $pending = $this->auditRepo->getPendingSync();
-        if ($pending->isEmpty()) return;
+        $all = $this->auditRepo->getAll();
+        if ($all->isEmpty()) return;
 
         $rows = [
             ['id', 'user_id', 'role', 'grade_id', 'student_id', 'subject_id', 'action', 'old_prelim', 'new_prelim', 'old_midterm', 'new_midterm', 'old_final', 'new_final', 'old_average', 'new_average', 'ip_address', 'created_at']
         ];
 
-        foreach ($this->auditRepo->getAll() as $log) {
+        foreach ($all as $log) {
             $rows[] = [
                 (string)$log->id,
                 $log->user_id,
@@ -685,7 +748,7 @@ class SheetSyncService
         }
 
         $this->googleSheets->writeTabValues('audit_logs', $rows);
-        foreach ($pending as $log) {
+        foreach ($all as $log) {
             $this->auditRepo->markSynced($log);
             $summary['Uploaded']++;
         }

@@ -45,6 +45,33 @@ class GoogleSheetsService
     }
 
     /**
+     * Fetch spreadsheet metadata (title, sheet names) without needing a specific tab.
+     * Safe to use as a connection test.
+     */
+    public function getSpreadsheetMetadata(): array
+    {
+        if (!$this->isConfigured()) {
+            throw new Exception('Google Sheets API is not configured or service account credentials are missing.');
+        }
+
+        try {
+            $spreadsheet = $this->service->spreadsheets->get($this->spreadsheetId);
+            $sheets = array_map(
+                fn($sheet) => $sheet->getProperties()->getTitle(),
+                $spreadsheet->getSheets()
+            );
+
+            return [
+                'title'  => $spreadsheet->getProperties()->getTitle(),
+                'sheets' => $sheets,
+            ];
+        } catch (Exception $e) {
+            Log::error('Failed to fetch spreadsheet metadata: ' . $e->getMessage());
+            throw $e;
+        }
+    }
+
+    /**
      * Fetch all values from a given sheet tab.
      */
     public function getTabValues(string $tabName): array
@@ -64,13 +91,75 @@ class GoogleSheetsService
     }
 
     /**
+     * Return all existing sheet tab names in the spreadsheet.
+     */
+    public function getExistingTabNames(): array
+    {
+        $spreadsheet = $this->service->spreadsheets->get($this->spreadsheetId);
+        return array_map(
+            fn($sheet) => $sheet->getProperties()->getTitle(),
+            $spreadsheet->getSheets()
+        );
+    }
+
+    /**
+     * Create a sheet tab if it does not already exist.
+     * Uses the batchUpdate API so writes never fail on a missing tab.
+     */
+    public function ensureTabExists(string $tabName): void
+    {
+        if (!$this->isConfigured()) {
+            throw new Exception('Google Sheets API is not configured.');
+        }
+
+        try {
+            $existingTabs = $this->getExistingTabNames();
+
+            // Case-insensitive check for existing sheet title
+            foreach ($existingTabs as $existing) {
+                if (strcasecmp(trim($existing), trim($tabName)) === 0) {
+                    return; // Tab already exists — nothing to do
+                }
+            }
+
+            $addSheetRequest = new \Google\Service\Sheets\Request([
+                'addSheet' => [
+                    'properties' => [
+                        'title' => $tabName,
+                    ],
+                ],
+            ]);
+
+            $batchUpdateRequest = new \Google\Service\Sheets\BatchUpdateSpreadsheetRequest([
+                'requests' => [$addSheetRequest],
+            ]);
+
+            $this->service->spreadsheets->batchUpdate($this->spreadsheetId, $batchUpdateRequest);
+
+            Log::info("Created missing Google Sheet tab: '{$tabName}'");
+        } catch (Exception $e) {
+            if (str_contains(strtolower($e->getMessage()), 'already exists')) {
+                Log::info("Tab '{$tabName}' already exists in Google Sheets.");
+                return;
+            }
+
+            Log::error("Failed to create tab '{$tabName}': " . $e->getMessage());
+            throw $e;
+        }
+    }
+
+    /**
      * Update or append values in a given tab.
+     * Automatically creates the tab if it does not exist.
      */
     public function writeTabValues(string $tabName, array $rows): bool
     {
         if (!$this->isConfigured()) {
             throw new Exception('Google Sheets API is not configured.');
         }
+
+        // Ensure the destination tab exists before writing
+        $this->ensureTabExists($tabName);
 
         try {
             $body = new ValueRange([
@@ -93,3 +182,4 @@ class GoogleSheetsService
         }
     }
 }
+

@@ -50,7 +50,8 @@ export default function TwoFactorChallenge() {
     };
 
     return (
-        <>
+        <div className="min-h-screen flex items-center justify-center bg-[#F0F4FF] dark:bg-slate-950 p-6">
+            <div className="w-full max-w-sm">
             <Head title="Two-factor authentication" />
 
             <div className="space-y-6">
@@ -128,6 +129,7 @@ export default function TwoFactorChallenge() {
                     )}
                 </Form>
             </div>
-        </>
+            </div>
+        </div>
     );
 }

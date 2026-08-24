@@ -15,7 +15,8 @@ type Props = {
 
 export default function ResetPassword({ token, email, passwordRules }: Props) {
     return (
-        <>
+        <div className="min-h-screen flex items-center justify-center bg-[#F0F4FF] dark:bg-slate-950 p-6">
+            <div className="w-full max-w-sm">
             <Head title="Reset password" />
 
             <Form
@@ -86,7 +87,8 @@ export default function ResetPassword({ token, email, passwordRules }: Props) {
                     </div>
                 )}
             </Form>
-        </>
+            </div>
+        </div>
     );
 }
 

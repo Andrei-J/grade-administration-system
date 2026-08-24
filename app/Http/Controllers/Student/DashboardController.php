@@ -78,7 +78,7 @@ class DashboardController extends Controller
                 'id' => $g->id,
                 'subject_code' => $g->subject?->subject_code ?? 'N/A',
                 'subject_name' => $g->subject?->subject_name ?? 'N/A',
-                'instructor_name' => $g->instructor?->name ?? 'Unassigned',
+                'instructor_name' => $g->instructor_name,
                 'prelim' => $g->prelim,
                 'midterm' => $g->midterm,
                 'final' => $g->final,

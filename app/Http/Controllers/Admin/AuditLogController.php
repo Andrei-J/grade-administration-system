@@ -19,19 +19,20 @@ class AuditLogController extends Controller
         $filters = $request->only(['user_id', 'student_id', 'action']);
         $logs = $this->auditRepo->getAll($filters);
 
-        $adminLogs = \App\Models\AdminAuditLog::where('action', '!=', 'FACULTY_PORTAL_ATTEMPT')
+        $adminLogs = \App\Models\AdminAuditLog::whereNotIn('action', ['FACULTY_PORTAL_ATTEMPT', 'STUDENT_PORTAL_ACCESS', 'STUDENT_PORTAL_ATTEMPT'])
             ->orderBy('created_at', 'desc')
             ->get();
 
-        $accessAttemptLogs = \App\Models\AdminAuditLog::where('action', 'FACULTY_PORTAL_ATTEMPT')
+        $accessAttemptLogs = \App\Models\AdminAuditLog::whereIn('action', ['FACULTY_PORTAL_ATTEMPT', 'STUDENT_PORTAL_ACCESS', 'STUDENT_PORTAL_ATTEMPT'])
             ->orderBy('created_at', 'desc')
             ->get();
 
         return Inertia::render('admin/audit-logs/index', [
-            'logs' => $logs,
-            'adminLogs' => $adminLogs,
+            'logs'              => $logs,
+            'adminLogs'         => $adminLogs,
             'accessAttemptLogs' => $accessAttemptLogs,
-            'filters' => $filters,
+            'filters'           => $filters,
         ]);
     }
+
 }

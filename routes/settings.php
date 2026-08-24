@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Settings\GoogleSheetsConfigController;
 use App\Http\Controllers\Settings\ProfileController;
 use App\Http\Controllers\Settings\SecurityController;
 use Illuminate\Auth\Middleware\RequirePassword;
@@ -10,6 +11,13 @@ Route::middleware(['auth'])->group(function () {
 
     Route::get('settings/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('settings/profile', [ProfileController::class, 'update'])->name('profile.update');
+
+    // Google Sheets configuration — admin only
+    Route::middleware('admin')->group(function () {
+        Route::get('settings/profile/google-sheets', [GoogleSheetsConfigController::class, 'show'])->name('google-sheets.show');
+        Route::post('settings/profile/google-sheets', [GoogleSheetsConfigController::class, 'save'])->name('google-sheets.save');
+        Route::post('settings/profile/google-sheets/test', [GoogleSheetsConfigController::class, 'testConnection'])->name('google-sheets.test');
+    });
 });
 
 Route::middleware(['auth', 'verified'])->group(function () {
@@ -30,6 +38,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::post('settings/sync/pull', [\App\Http\Controllers\Admin\SyncController::class, 'pull'])->name('sync.pull');
     Route::post('settings/sync/push', [\App\Http\Controllers\Admin\SyncController::class, 'push'])->name('sync.push');
     Route::post('settings/sync/both', [\App\Http\Controllers\Admin\SyncController::class, 'both'])->name('sync.both');
+    Route::post('settings/sync/toggle-local', [\App\Http\Controllers\Admin\SyncController::class, 'toggleLocalSheet'])->name('sync.toggle-local');
+    Route::get('settings/sync/download-local', [\App\Http\Controllers\Admin\SyncController::class, 'downloadLocalSheet'])->name('sync.download-local');
 });
 
 Route::get('.well-known/passkey-endpoints', function () {

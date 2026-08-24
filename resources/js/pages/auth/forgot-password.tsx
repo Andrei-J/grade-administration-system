@@ -11,7 +11,8 @@ import { email } from '@/routes/password';
 
 export default function ForgotPassword({ status }: { status?: string }) {
     return (
-        <>
+        <div className="min-h-screen flex items-center justify-center bg-[#F0F4FF] dark:bg-slate-950 p-6">
+            <div className="w-full max-w-sm">
             <Head title="Forgot password" />
 
             {status && (
@@ -59,7 +60,8 @@ export default function ForgotPassword({ status }: { status?: string }) {
                     <TextLink href={login()}>log in</TextLink>
                 </div>
             </div>
-        </>
+            </div>
+        </div>
     );
 }
 

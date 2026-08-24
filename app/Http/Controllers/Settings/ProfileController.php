@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Settings;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Settings\ProfileDeleteRequest;
 use App\Http\Requests\Settings\ProfileUpdateRequest;
+use App\Services\GoogleSheetsService;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -19,9 +20,20 @@ class ProfileController extends Controller
      */
     public function edit(Request $request): Response
     {
+        $credentialsPath = base_path(env('GOOGLE_SHEETS_CREDENTIALS', 'storage/app/google/service-account.json'));
+        $credentialsExist = file_exists($credentialsPath);
+        $credentialsJson = $credentialsExist ? file_get_contents($credentialsPath) : null;
+
         return Inertia::render('settings/profile', [
             'mustVerifyEmail' => $request->user() instanceof MustVerifyEmail,
-            'status' => $request->session()->get('status'),
+            'status'         => $request->session()->get('status'),
+            'googleSheets'   => [
+                'spreadsheetId'     => env('GOOGLE_SHEETS_ID', ''),
+                'credentialsJson'   => $credentialsJson,
+                'credentialsExist'  => $credentialsExist,
+                'isConnected'       => app(GoogleSheetsService::class)->isConfigured(),
+                'isAdmin'           => $request->user()->isAdmin(),
+            ],
         ]);
     }
 

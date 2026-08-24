@@ -90,7 +90,7 @@ export default function AssignmentManagement({
     const [isSubmitting, setIsSubmitting] = useState(false);
     const { flash } = usePage().props as PageProps;
 
-    const [instructorId, setInstructorId] = useState<string>(instructors[0]?.email || '');
+    const [instructorId, setInstructorId] = useState<string>(instructors[0]?.instructor_id || '');
     const [pairings, setPairings] = useState<SectionPairing[]>([
         {
             section_id: sections[0]?.section_name || '',
@@ -103,7 +103,7 @@ export default function AssignmentManagement({
     const irregularForm = useForm({
         student_id: students[0]?.student_id || '',
         subject_id: subjects[0]?.subject_code || '',
-        instructor_id: instructors[0]?.email || '',
+        instructor_id: instructors[0]?.instructor_id || '',
         section_id: sections[0]?.section_name || '',
         school_year: '2026-2027',
     });
@@ -147,7 +147,7 @@ export default function AssignmentManagement({
 
     const openCreateModal = () => {
         setEditingAssignment(null);
-        setInstructorId(instructors[0]?.email || '');
+        setInstructorId(instructors[0]?.instructor_id || '');
         const initialSec = sections[0]?.section_name || '';
         setPairings([
             {
@@ -190,7 +190,7 @@ export default function AssignmentManagement({
         irregularForm.setData({
             student_id: students[0]?.student_id || '',
             subject_id: (firstPair?.subject_ids && firstPair.subject_ids[0]) || subjects[0]?.subject_code || '',
-            instructor_id: instructorId || instructors[0]?.email || '',
+            instructor_id: instructorId || instructors[0]?.instructor_id || '',
             section_id: firstPair?.section_id || sections[0]?.section_name || '',
             school_year: schoolYear || '2026-2027',
         });
@@ -366,10 +366,7 @@ export default function AssignmentManagement({
                                         groupedAssignments.map((group) => (
                                             <tr key={`${group.instructor_id}_${group.school_year}`} className="hover:bg-slate-50/50 dark:hover:bg-slate-800/40">
                                                 <td className="p-3 font-medium text-slate-900 dark:text-white">
-                                                    <div>
-                                                        <p className="font-bold text-slate-900 dark:text-white">{group.instructor_name}</p>
-                                                        <p className="text-xs text-slate-400 font-mono">{group.instructor_id}</p>
-                                                    </div>
+                                                    <p className="font-bold text-slate-900 dark:text-white">{group.instructor_name}</p>
                                                 </td>
                                                 <td className="p-3 text-slate-900 dark:text-white font-semibold">
                                                     <span className="font-semibold text-slate-800 dark:text-slate-200 text-sm">
@@ -447,7 +444,7 @@ export default function AssignmentManagement({
                                         required
                                     >
                                         {instructors.map((i) => (
-                                            <option key={i.instructor_id} value={i.email}>
+                                            <option key={i.instructor_id} value={i.instructor_id}>
                                                 {i.name} ({i.email})
                                             </option>
                                         ))}

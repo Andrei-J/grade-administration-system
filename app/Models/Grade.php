@@ -49,6 +49,19 @@ class Grade extends Model
         return $this->belongsTo(Instructor::class, 'instructor_id', 'instructor_id');
     }
 
+    /**
+     * Resolve instructor regardless of whether the stored value is an instructor_id or email.
+     */
+    public function resolvedInstructor(): ?Instructor
+    {
+        if (!empty($this->instructor_id)) {
+            return Instructor::where('instructor_id', $this->instructor_id)
+                ->orWhere('email', $this->instructor_id)
+                ->first();
+        }
+        return null;
+    }
+
     public function getInstructorNameAttribute(): string
     {
         if ($this->instructor && !empty($this->instructor->name)) {

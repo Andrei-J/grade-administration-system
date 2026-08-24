@@ -48,19 +48,37 @@ class FortifyServiceProvider extends ServiceProvider
             if ($user && \Illuminate\Support\Facades\Hash::check($request->password, $user->password)) {
                 $portal = $request->input('portal') ?? $request->input('role');
 
+                // Block students from logging in via the faculty/admin portal toggle
                 if ($portal === 'faculty' && $user->isStudent()) {
                     \App\Models\AdminAuditLog::create([
-                        'email' => $user->email,
-                        'user_name' => $user->name,
-                        'role' => $user->role,
-                        'action' => 'FACULTY_PORTAL_ATTEMPT',
-                        'status' => 'BLOCKED',
-                        'details' => 'Student attempted login on Faculty/Admin toggle — Access Denied (Faculty log in only)',
+                        'email'      => $user->email,
+                        'user_name'  => $user->name,
+                        'role'       => $user->role,
+                        'action'     => 'FACULTY_PORTAL_ATTEMPT',
+                        'status'     => 'BLOCKED',
+                        'details'    => 'Student attempted login on Faculty/Admin toggle — Access Denied (Faculty log in only)',
                         'ip_address' => $request->ip(),
                     ]);
 
                     throw \Illuminate\Validation\ValidationException::withMessages([
-                        'email' => ['Faculty log in only!'],
+                        'email' => ['Faculty log in only! Student accounts are restricted from accessing this portal.'],
+                    ]);
+                }
+
+                // Block professors, instructors, and admins from logging in via the student portal toggle
+                if ($portal === 'student' && ($user->isAdmin() || $user->isInstructor())) {
+                    \App\Models\AdminAuditLog::create([
+                        'email'      => $user->email,
+                        'user_name'  => $user->name,
+                        'role'       => $user->role,
+                        'action'     => 'STUDENT_PORTAL_ATTEMPT',
+                        'status'     => 'BLOCKED',
+                        'details'    => ucfirst($user->role) . ' attempted login on Student Portal toggle — Access Denied (Student log in only)',
+                        'ip_address' => $request->ip(),
+                    ]);
+
+                    throw \Illuminate\Validation\ValidationException::withMessages([
+                        'email' => ['Student log in only! Faculty and Admin accounts are restricted from accessing this portal.'],
                     ]);
                 }
 
@@ -70,14 +88,15 @@ class FortifyServiceProvider extends ServiceProvider
                     ]);
                 }
 
+                // Log normal admin/instructor portal login
                 if ($user->isAdmin() || $user->isInstructor()) {
                     \App\Models\AdminAuditLog::create([
-                        'email' => $user->email,
-                        'user_name' => $user->name,
-                        'role' => $user->role,
-                        'action' => 'PORTAL_LOGIN',
-                        'status' => 'SUCCESS',
-                        'details' => 'Successfully authenticated into ' . ucfirst($user->role) . ' Portal',
+                        'email'      => $user->email,
+                        'user_name'  => $user->name,
+                        'role'       => $user->role,
+                        'action'     => 'PORTAL_LOGIN',
+                        'status'     => 'SUCCESS',
+                        'details'    => 'Successfully authenticated into ' . ucfirst($user->role) . ' Portal',
                         'ip_address' => $request->ip(),
                     ]);
                 }
@@ -87,6 +106,7 @@ class FortifyServiceProvider extends ServiceProvider
 
             return null;
         });
+
     }
 
     /**

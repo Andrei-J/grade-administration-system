@@ -1,11 +1,8 @@
-<?php
-
-namespace App\Http\Controllers\Admin;
-
 use App\Http\Controllers\Controller;
-use App\Services\SheetSyncService;
-use App\Services\GoogleSheetsService;
 use App\Repositories\SyncLogRepository;
+use App\Services\GoogleSheetsService;
+use App\Services\LocalExcelSheetService;
+use App\Services\SheetSyncService;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -15,7 +12,8 @@ class SyncController extends Controller
     public function __construct(
         protected SheetSyncService $syncService,
         protected GoogleSheetsService $googleSheets,
-        protected SyncLogRepository $syncLogRepo
+        protected SyncLogRepository $syncLogRepo,
+        protected LocalExcelSheetService $localExcelSheets
     ) {}
 
     public function index(): Response
@@ -24,6 +22,7 @@ class SyncController extends Controller
         $spreadsheetId = $this->googleSheets->getSpreadsheetId();
         $syncLogs = $this->syncLogRepo->getAll(20);
         $lastLog = $syncLogs->first();
+        $localStats = $this->localExcelSheets->getLocalFileStats();
 
         return Inertia::render('settings/sync', [
             'googleStatus' => [
@@ -33,6 +32,7 @@ class SyncController extends Controller
                 'last_synced_at' => $lastLog?->created_at?->toDayDateTimeString() ?? 'Never',
                 'last_status' => $lastLog?->status ?? 'Not Run Yet',
             ],
+            'localSheet' => $localStats,
             'syncLogs' => $syncLogs,
         ]);
     }
@@ -69,4 +69,27 @@ class SyncController extends Controller
 
         return redirect()->back()->with('error', $result['message']);
     }
+
+    public function toggleLocalSheet(Request $request)
+    {
+        $newStatus = $this->localExcelSheets->toggleLocalSheet();
+
+        if ($newStatus) {
+            return redirect()->back()->with('success', 'Local Excel sheet (.xlsx) activated successfully! Storage location: storage/app/sheets/grade_administration_local_sheets.xlsx');
+        }
+
+        return redirect()->back()->with('success', 'Local Excel sheet (.xlsx) deactivated.');
+    }
+
+    public function downloadLocalSheet()
+    {
+        $path = $this->localExcelSheets->getLocalFilePath();
+
+        if (! file_exists($path)) {
+            $this->localExcelSheets->generateLocalExcelFile();
+        }
+
+        return response()->download($path, 'grade_administration_local_sheets.xlsx');
+    }
 }
+

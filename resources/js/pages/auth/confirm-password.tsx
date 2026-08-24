@@ -13,7 +13,8 @@ import { store } from '@/routes/password/confirm';
 
 export default function ConfirmPassword() {
     return (
-        <>
+        <div className="min-h-screen flex items-center justify-center bg-[#F0F4FF] dark:bg-slate-950 p-6">
+            <div className="w-full max-w-sm">
             <Head title="Confirm password" />
 
             <PasskeyVerify
@@ -55,7 +56,8 @@ export default function ConfirmPassword() {
                     </div>
                 )}
             </Form>
-        </>
+            </div>
+        </div>
     );
 }
 
