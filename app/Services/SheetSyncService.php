@@ -58,6 +58,8 @@ class SheetSyncService
         }
 
         try {
+            // Pull Users
+            $this->pullUsers($summary);
             // Pull Students
             $this->pullStudents($summary);
             // Pull Instructors
@@ -131,6 +133,8 @@ class SheetSyncService
         }
 
         try {
+            // Push Users
+            $this->pushUsers($summary);
             // Push Students
             $this->pushStudents($summary);
             // Push Instructors
@@ -684,6 +688,80 @@ class SheetSyncService
         foreach ($pending as $log) {
             $this->auditRepo->markSynced($log);
             $summary['Uploaded']++;
+        }
+    }
+
+    protected function pullUsers(array &$summary): void
+    {
+        try {
+            $rows = $this->googleSheets->getTabValues('users');
+            if (count($rows) <= 1) return;
+
+            $headers = array_map('trim', array_shift($rows));
+            foreach ($rows as $row) {
+                if (empty(array_filter($row))) continue;
+                $data = $this->mapRowToHeader($headers, $row);
+
+                $email = $data['email'] ?? null;
+                if (!$email) continue;
+
+                $user = \App\Models\User::where('email', $email)->first();
+                $userData = [
+                    'name' => $data['username'] ?? $data['name'] ?? explode('@', $email)[0],
+                    'email' => $email,
+                    'role' => $data['role'] ?? 'student',
+                    'status' => $data['status'] ?? 'Active',
+                    'profile_id' => $data['profile_id'] ?? null,
+                    'sync_status' => 'synced',
+                    'synced_at' => now(),
+                ];
+
+                if (!empty($data['password']) && str_starts_with($data['password'], '$2y$')) {
+                    $userData['password'] = $data['password'];
+                }
+
+                if ($user) {
+                    $user->update($userData);
+                    $summary['Updated']++;
+                } else {
+                    if (empty($userData['password'])) {
+                        $userData['password'] = \Illuminate\Support\Facades\Hash::make('password');
+                    }
+                    \App\Models\User::create($userData);
+                    $summary['Added']++;
+                }
+            }
+        } catch (Exception $e) {
+            Log::warning('Pull users notice: ' . $e->getMessage());
+        }
+    }
+
+    protected function pushUsers(array &$summary): void
+    {
+        $rows = [
+            ['id', 'username', 'email', 'password', 'role', 'status', 'profile_id', 'created_at', 'updated_at']
+        ];
+
+        $users = \App\Models\User::all();
+        foreach ($users as $u) {
+            $rows[] = [
+                (string)$u->id,
+                $u->name,
+                $u->email,
+                $u->password,
+                $u->role,
+                $u->status,
+                $u->profile_id ?? '',
+                $u->created_at?->toDateTimeString() ?? '',
+                $u->updated_at?->toDateTimeString() ?? '',
+            ];
+        }
+
+        try {
+            $this->googleSheets->writeTabValues('users', $rows);
+            $summary['Uploaded'] += count($users);
+        } catch (Exception $e) {
+            Log::warning('Push users notice: ' . $e->getMessage());
         }
     }
 

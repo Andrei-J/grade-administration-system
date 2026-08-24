@@ -41,6 +41,52 @@ class FortifyServiceProvider extends ServiceProvider
     {
         Fortify::resetUserPasswordsUsing(ResetUserPassword::class);
         Fortify::createUsersUsing(CreateNewUser::class);
+
+        Fortify::authenticateUsing(function (Request $request) {
+            $user = \App\Models\User::where('email', $request->email)->first();
+
+            if ($user && \Illuminate\Support\Facades\Hash::check($request->password, $user->password)) {
+                $portal = $request->input('portal') ?? $request->input('role');
+
+                if ($portal === 'faculty' && $user->isStudent()) {
+                    \App\Models\AdminAuditLog::create([
+                        'email' => $user->email,
+                        'user_name' => $user->name,
+                        'role' => $user->role,
+                        'action' => 'FACULTY_PORTAL_ATTEMPT',
+                        'status' => 'BLOCKED',
+                        'details' => 'Student attempted login on Faculty/Admin toggle — Access Denied (Faculty log in only)',
+                        'ip_address' => $request->ip(),
+                    ]);
+
+                    throw \Illuminate\Validation\ValidationException::withMessages([
+                        'email' => ['Faculty log in only!'],
+                    ]);
+                }
+
+                if ($user->status && $user->status !== 'Active') {
+                    throw \Illuminate\Validation\ValidationException::withMessages([
+                        'email' => ['Your account is inactive. Please contact the administrator.'],
+                    ]);
+                }
+
+                if ($user->isAdmin() || $user->isInstructor()) {
+                    \App\Models\AdminAuditLog::create([
+                        'email' => $user->email,
+                        'user_name' => $user->name,
+                        'role' => $user->role,
+                        'action' => 'PORTAL_LOGIN',
+                        'status' => 'SUCCESS',
+                        'details' => 'Successfully authenticated into ' . ucfirst($user->role) . ' Portal',
+                        'ip_address' => $request->ip(),
+                    ]);
+                }
+
+                return $user;
+            }
+
+            return null;
+        });
     }
 
     /**

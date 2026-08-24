@@ -25,7 +25,7 @@ class CreateNewUser implements CreatesNewUsers
         ])->validate();
 
         $isFirstUser = User::count() === 0;
-        $role = $input['role'] ?? ($isFirstUser ? 'admin' : 'instructor');
+        $role = $isFirstUser ? 'admin' : ($input['role'] ?? 'student');
 
         return User::create([
             'name' => $input['name'],

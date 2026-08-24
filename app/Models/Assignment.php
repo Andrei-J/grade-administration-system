@@ -15,12 +15,19 @@ class Assignment extends Model
         'subject_id',
         'section_id',
         'school_year',
+        'semester',
+        'prelim_weight',
+        'midterm_weight',
+        'final_weight',
         'status',
         'sync_status',
         'synced_at',
     ];
 
     protected $casts = [
+        'prelim_weight' => 'float',
+        'midterm_weight' => 'float',
+        'final_weight' => 'float',
         'synced_at' => 'datetime',
     ];
 
@@ -29,8 +36,38 @@ class Assignment extends Model
         return $this->belongsTo(Instructor::class, 'instructor_id', 'instructor_id');
     }
 
+    public function getInstructorNameAttribute(): string
+    {
+        if ($this->instructor && !empty($this->instructor->name)) {
+            return $this->instructor->name;
+        }
+
+        if (!empty($this->instructor_id)) {
+            $inst = Instructor::where('instructor_id', $this->instructor_id)
+                ->orWhere('email', $this->instructor_id)
+                ->orWhere('id', $this->instructor_id)
+                ->first();
+
+            if ($inst && !empty($inst->name)) {
+                return $inst->name;
+            }
+
+            $user = User::where('email', $this->instructor_id)
+                ->orWhere('profile_id', $this->instructor_id)
+                ->orWhere('id', $this->instructor_id)
+                ->first();
+
+            if ($user && !empty($user->name)) {
+                return $user->name;
+            }
+        }
+
+        return 'Unassigned';
+    }
+
     public function subject()
     {
         return $this->belongsTo(Subject::class, 'subject_id', 'subject_code');
     }
 }
+

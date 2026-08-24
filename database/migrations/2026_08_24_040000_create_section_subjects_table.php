@@ -1,0 +1,25 @@
+<?php
+
+use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
+
+return new class extends Migration
+{
+    public function up(): void
+    {
+        Schema::create('section_subjects', function (Blueprint $table) {
+            $table->id();
+            $table->string('section_id');
+            $table->string('subject_id');
+            $table->timestamps();
+
+            $table->unique(['section_id', 'subject_id']);
+        });
+    }
+
+    public function down(): void
+    {
+        Schema::dropIfExists('section_subjects');
+    }
+};

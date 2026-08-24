@@ -128,8 +128,3 @@ export default function Register({ passwordRules }: Props) {
         </div>
     );
 }
-
-Register.layout = {
-    title: 'Create an account',
-    description: 'Enter your details below to create your account',
-};

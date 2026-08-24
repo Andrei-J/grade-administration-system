@@ -13,6 +13,7 @@ class Subject extends Model
         'google_sheet_id',
         'subject_code',
         'subject_name',
+        'password',
         'description',
         'status',
         'sync_status',

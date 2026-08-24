@@ -28,9 +28,14 @@ class SectionController extends Controller
         $validated = $request->validate([
             'grade_level' => 'required|string|max:50',
             'section_name' => 'required|string|max:50',
+            'program' => 'nullable|string|max:50',
+            'semester' => 'nullable|string|max:50',
             'school_year' => 'required|string|max:20',
             'status' => 'required|string|in:Active,Inactive',
         ]);
+
+        $validated['program'] = $validated['program'] ?? 'BSAIT';
+        $validated['semester'] = $validated['semester'] ?? '1st Semester';
 
         $this->sectionRepo->create($validated);
 
@@ -47,9 +52,14 @@ class SectionController extends Controller
         $validated = $request->validate([
             'grade_level' => 'required|string|max:50',
             'section_name' => 'required|string|max:50',
+            'program' => 'nullable|string|max:50',
+            'semester' => 'nullable|string|max:50',
             'school_year' => 'required|string|max:20',
             'status' => 'required|string|in:Active,Inactive',
         ]);
+
+        $validated['program'] = $validated['program'] ?? 'BSAIT';
+        $validated['semester'] = $validated['semester'] ?? '1st Semester';
 
         $this->sectionRepo->update($section, $validated);
 

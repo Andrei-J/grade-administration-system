@@ -19,8 +19,15 @@ class EnsureRole
             return redirect()->route('login');
         }
 
-        if ($user->role !== $role) {
-            abort(403, 'Unauthorized. Access restricted to ' . ucfirst($role) . ' role.');
+        $hasRole = false;
+        if ($role === 'instructor' || $role === 'professor') {
+            $hasRole = $user->isInstructor();
+        } else {
+            $hasRole = $user->role === $role;
+        }
+
+        if (!$hasRole) {
+            abort(403, 'You are not authorized to access this page.');
         }
 
         if ($user->status !== 'Active') {

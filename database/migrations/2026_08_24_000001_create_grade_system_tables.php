@@ -11,23 +11,6 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::table('users', function (Blueprint $table) {
-            if (!Schema::hasColumn('users', 'role')) {
-                $table->string('role')->default('admin')->after('email');
-            }
-            if (!Schema::hasColumn('users', 'status')) {
-                $table->string('status')->default('Active')->after('role');
-            }
-            if (!Schema::hasColumn('users', 'google_sheet_id')) {
-                $table->string('google_sheet_id')->nullable()->after('status');
-            }
-            if (!Schema::hasColumn('users', 'sync_status')) {
-                $table->string('sync_status')->default('synced')->after('google_sheet_id');
-            }
-            if (!Schema::hasColumn('users', 'synced_at')) {
-                $table->timestamp('synced_at')->nullable()->after('sync_status');
-            }
-        });
 
         Schema::create('students', function (Blueprint $table) {
             $table->id();
@@ -162,9 +145,5 @@ return new class extends Migration
         Schema::dropIfExists('subjects');
         Schema::dropIfExists('instructors');
         Schema::dropIfExists('students');
-
-        Schema::table('users', function (Blueprint $table) {
-            $table->dropColumn(['role', 'status', 'google_sheet_id', 'sync_status', 'synced_at']);
-        });
     }
 };

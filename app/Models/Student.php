@@ -15,6 +15,8 @@ class Student extends Model
         'name',
         'grade_level',
         'section',
+        'program',
+        'semester',
         'school_year',
         'status',
         'sync_status',
@@ -28,5 +30,10 @@ class Student extends Model
     public function grades()
     {
         return $this->hasMany(Grade::class, 'student_id', 'student_id');
+    }
+
+    public function user()
+    {
+        return $this->hasOne(User::class, 'profile_id', 'student_id');
     }
 }

@@ -70,10 +70,50 @@ class ClassController extends Controller
             'school_year' => $assignment->school_year,
         ])->keyBy('student_id');
 
+        $isSubmissionDisabled = \App\Models\SystemSetting::isGradeSubmissionDisabled();
+        $submissionSettings = \App\Models\SystemSetting::getSetting('grade_submission');
+
         return Inertia::render('instructor/classes/show', [
             'assignment' => $assignment,
             'students' => $students,
             'grades' => $grades,
+            'isSubmissionDisabled' => $isSubmissionDisabled,
+            'submissionSettings' => $submissionSettings,
         ]);
     }
+
+    public function updateWeights(Request $request, int $id)
+    {
+        $user = $request->user();
+        $assignment = $this->assignmentRepo->getAll()->firstWhere('id', $id);
+
+        if (!$assignment) {
+            return redirect()->back()->with('error', 'Class assignment not found.');
+        }
+
+        if ($user->isInstructor() && $assignment->instructor_id !== $user->email && $assignment->instructor_id !== (string)$user->id && ($assignment->instructor?->email !== $user->email)) {
+            return redirect()->back()->with('error', 'Unauthorized to modify class settings.');
+        }
+
+        $validated = $request->validate([
+            'prelim_weight' => 'required|numeric|min:0|max:100',
+            'midterm_weight' => 'required|numeric|min:0|max:100',
+            'final_weight' => 'required|numeric|min:0|max:100',
+        ]);
+
+        $total = $validated['prelim_weight'] + $validated['midterm_weight'] + $validated['final_weight'];
+        if (abs($total - 100) > 0.01) {
+            return redirect()->back()->with('error', "Total weight percentage must equal 100% (Current total: {$total}%).");
+        }
+
+        $assignment->update([
+            'prelim_weight' => $validated['prelim_weight'],
+            'midterm_weight' => $validated['midterm_weight'],
+            'final_weight' => $validated['final_weight'],
+        ]);
+
+        return redirect()->back()->with('success', "Grade weight percentages successfully updated for {$assignment->subject_id} (Prelim: {$validated['prelim_weight']}%, Midterm: {$validated['midterm_weight']}%, Final: {$validated['final_weight']}%).");
+    }
 }
+
+

@@ -28,11 +28,22 @@ class SubjectController extends Controller
         $validated = $request->validate([
             'subject_code' => 'required|string|unique:subjects,subject_code',
             'subject_name' => 'required|string|max:255',
+            'password' => 'nullable|string|max:255',
             'description' => 'nullable|string',
             'status' => 'required|string|in:Active,Inactive',
         ]);
 
         $this->subjectRepo->create($validated);
+
+        \App\Models\AdminAuditLog::create([
+            'email' => $request->user()?->email,
+            'user_name' => $request->user()?->name,
+            'role' => 'admin',
+            'action' => 'CREATE_SUBJECT',
+            'status' => 'SUCCESS',
+            'details' => "Created subject {$validated['subject_code']} ({$validated['subject_name']})",
+            'ip_address' => $request->ip(),
+        ]);
 
         return redirect()->back()->with('success', 'Subject created successfully.');
     }
@@ -47,11 +58,22 @@ class SubjectController extends Controller
         $validated = $request->validate([
             'subject_code' => 'required|string|unique:subjects,subject_code,' . $id,
             'subject_name' => 'required|string|max:255',
+            'password' => 'nullable|string|max:255',
             'description' => 'nullable|string',
             'status' => 'required|string|in:Active,Inactive',
         ]);
 
         $this->subjectRepo->update($subject, $validated);
+
+        \App\Models\AdminAuditLog::create([
+            'email' => $request->user()?->email,
+            'user_name' => $request->user()?->name,
+            'role' => 'admin',
+            'action' => 'UPDATE_SUBJECT',
+            'status' => 'SUCCESS',
+            'details' => "Updated subject {$validated['subject_code']} ({$validated['subject_name']})",
+            'ip_address' => $request->ip(),
+        ]);
 
         return redirect()->back()->with('success', 'Subject updated successfully.');
     }

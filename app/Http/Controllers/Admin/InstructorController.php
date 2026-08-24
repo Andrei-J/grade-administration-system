@@ -55,6 +55,16 @@ class InstructorController extends Controller
             'status' => $validated['status'],
         ]);
 
+        \App\Models\AdminAuditLog::create([
+            'email' => $request->user()?->email,
+            'user_name' => $request->user()?->name,
+            'role' => 'admin',
+            'action' => 'CREATE_INSTRUCTOR',
+            'status' => 'SUCCESS',
+            'details' => "Created instructor account for {$validated['name']} ({$validated['instructor_id']})",
+            'ip_address' => $request->ip(),
+        ]);
+
         return redirect()->back()->with('success', 'Instructor account created successfully.');
     }
 
@@ -69,20 +79,40 @@ class InstructorController extends Controller
             'instructor_id' => 'required|string|unique:instructors,instructor_id,' . $id,
             'name' => 'required|string|max:255',
             'email' => 'required|email|unique:instructors,email,' . $id,
+            'password' => 'nullable|string|min:8',
             'status' => 'required|string|in:Active,Inactive',
         ]);
 
-        $this->instructorRepo->update($instructor, $validated);
+        $this->instructorRepo->update($instructor, [
+            'instructor_id' => $validated['instructor_id'],
+            'name' => $validated['name'],
+            'email' => $validated['email'],
+            'status' => $validated['status'],
+        ]);
 
         // Also update matching User account if exists
         $user = $this->userRepo->findByEmail($instructor->email);
         if ($user) {
-            $this->userRepo->update($user, [
+            $userData = [
                 'name' => $validated['name'],
                 'email' => $validated['email'],
                 'status' => $validated['status'],
-            ]);
+            ];
+            if (!empty($validated['password'])) {
+                $userData['password'] = Hash::make($validated['password']);
+            }
+            $this->userRepo->update($user, $userData);
         }
+
+        \App\Models\AdminAuditLog::create([
+            'email' => $request->user()?->email,
+            'user_name' => $request->user()?->name,
+            'role' => 'admin',
+            'action' => 'UPDATE_INSTRUCTOR',
+            'status' => 'SUCCESS',
+            'details' => "Updated instructor account for {$validated['name']} ({$validated['instructor_id']})",
+            'ip_address' => $request->ip(),
+        ]);
 
         return redirect()->back()->with('success', 'Instructor account updated successfully.');
     }

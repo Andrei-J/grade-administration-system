@@ -37,15 +37,27 @@ class GradeService
     }
 
     /**
-     * Calculate Final Average: (Prelim + Midterm + Final) / 3 rounded to 2 decimal places.
+     * Calculate Final Average using custom percentage weights.
      */
-    public function calculateFinalAverage(?float $prelim, ?float $midterm, ?float $final): ?float
-    {
+    public function calculateFinalAverage(
+        ?float $prelim,
+        ?float $midterm,
+        ?float $final,
+        float $pw = 30.0,
+        float $mw = 30.0,
+        float $fw = 40.0
+    ): ?float {
         if ($prelim === null || $midterm === null || $final === null) {
             return null;
         }
 
-        return round(($prelim + $midterm + $final) / 3.0, 2);
+        $totalWeight = $pw + $mw + $fw;
+        if ($totalWeight <= 0) {
+            $totalWeight = 100.0;
+        }
+
+        $average = ($prelim * ($pw / $totalWeight)) + ($midterm * ($mw / $totalWeight)) + ($final * ($fw / $totalWeight));
+        return round($average, 2);
     }
 
     /**
@@ -68,38 +80,56 @@ class GradeService
         array $data,
         ?string $ipAddress = null
     ): Grade {
+        // Enforce global grade submission disable settings
+        if (\App\Models\SystemSetting::isGradeSubmissionDisabled()) {
+            $setting = \App\Models\SystemSetting::getSetting('grade_submission');
+            $msg = !empty($setting['message']) ? $setting['message'] : 'Grade submission is currently disabled by the administration.';
+            throw new Exception($msg);
+        }
+
         // Enforce authorization if user is an instructor
         if ($user->isInstructor()) {
             $isAssigned = $this->assignmentRepo->isAssigned(
-                $user->email, // or instructor_id
+                $user->email,
                 $data['subject_id'],
                 $data['section_id'],
                 $data['school_year']
             );
 
-            // Also check by user's name/email match to instructor_id
             if (!$isAssigned) {
-                // Check if instructor_id matches user id or email
                 if (($data['instructor_id'] ?? '') !== $user->email && ($data['instructor_id'] ?? '') !== (string)$user->id) {
                     throw new Exception('Unauthorized: You are not assigned to encode grades for this class.');
                 }
             }
         }
 
-        $prelim = $this->validateGradeValue($data['prelim'] ?? null, 'Prelim Grade');
-        $midterm = $this->validateGradeValue($data['midterm'] ?? null, 'Midterm Grade');
-        $final = $this->validateGradeValue($data['final'] ?? null, 'Final Grade');
-
-        $average = $this->calculateFinalAverage($prelim, $midterm, $final);
-        $status = $this->calculateStatus($average);
-
-        // Fetch existing grade for audit comparison
+        // Fetch existing grade for audit & locked check
         $existing = $this->gradeRepo->findGrade(
             $data['student_id'],
             $data['subject_id'],
             $data['section_id'],
             $data['school_year']
         );
+
+        if ($existing && $existing->status === 'Passed' && !$user->isAdmin()) {
+            throw new Exception("Cannot modify grade: This student's grade has already been Passed and locked.");
+        }
+
+        // Fetch assignment to retrieve custom weights if configured
+        $assignment = \App\Models\Assignment::where('subject_id', $data['subject_id'])
+            ->where('section_id', $data['section_id'])
+            ->first();
+
+        $pw = $assignment->prelim_weight ?? 30.0;
+        $mw = $assignment->midterm_weight ?? 30.0;
+        $fw = $assignment->final_weight ?? 40.0;
+
+        $prelim = $this->validateGradeValue($data['prelim'] ?? null, 'Prelim Grade');
+        $midterm = $this->validateGradeValue($data['midterm'] ?? null, 'Midterm Grade');
+        $final = $this->validateGradeValue($data['final'] ?? null, 'Final Grade');
+
+        $average = $this->calculateFinalAverage($prelim, $midterm, $final, $pw, $mw, $fw);
+        $status = $this->calculateStatus($average);
 
         $oldPrelim = $existing?->prelim;
         $oldMidterm = $existing?->midterm;

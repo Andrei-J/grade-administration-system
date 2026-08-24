@@ -96,8 +96,8 @@ class RankingService
 
         foreach ($results as $index => $row) {
             if ($index > 0) {
-                if ($row['average'] == $results[$index - 1]['average']) {
-                    $row['rank'] = $results[$index - 1]['rank'];
+                if ($row['average'] == $rankedResults[$index - 1]['average']) {
+                    $row['rank'] = $rankedResults[$index - 1]['rank'];
                     $row['is_tie'] = true;
                     // Mark previous as tie too
                     if (isset($rankedResults[$index - 1])) {

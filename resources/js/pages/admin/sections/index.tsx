@@ -29,7 +29,7 @@ export default function SectionManagement({ sections }: Props) {
     const [editingSection, setEditingSection] = useState<Section | null>(null);
 
     const { data, setData, post, put, processing, errors, reset } = useForm({
-        grade_level: 'Grade 12',
+        grade_level: '1st Year',
         section_name: '',
         school_year: '2026-2027',
         status: 'Active',
@@ -140,12 +140,19 @@ export default function SectionManagement({ sections }: Props) {
                             <form onSubmit={handleSubmit} className="space-y-4">
                                 <div>
                                     <label className="text-xs font-medium text-slate-700">Grade Level</label>
-                                    <Input
+                                    <select
                                         value={data.grade_level}
                                         onChange={(e) => setData('grade_level', e.target.value)}
-                                        placeholder="Grade 12"
+                                        className="w-full text-sm border border-slate-300 rounded-md p-2 mt-1"
                                         required
-                                    />
+                                    >
+                                        <option value="1st Year">1st Year</option>
+                                        <option value="2nd Year">2nd Year</option>
+                                        <option value="3rd Year">3rd Year</option>
+                                        <option value="4th Year">4th Year</option>
+                                        <option value="5th Year">5th Year</option>
+                                        <option value="6th Year">6th Year</option>
+                                    </select>
                                 </div>
 
                                 <div>

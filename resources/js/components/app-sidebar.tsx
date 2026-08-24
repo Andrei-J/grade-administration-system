@@ -10,6 +10,7 @@ import {
     Trophy,
     History,
     RefreshCw,
+    ShieldAlert,
 } from 'lucide-react';
 import AppLogo from '@/components/app-logo';
 import { NavMain } from '@/components/nav-main';
@@ -27,7 +28,9 @@ import type { NavItem, SharedData } from '@/types';
 
 export function AppSidebar() {
     const { auth } = usePage<SharedData>().props;
-    const isInstructor = auth?.user?.role === 'instructor';
+    const role = auth?.user?.role;
+    const isInstructor = role === 'instructor' || role === 'professor';
+    const isStudent = role === 'student';
 
     const adminNavItems: NavItem[] = [
         {
@@ -61,6 +64,11 @@ export function AppSidebar() {
             icon: UserPlus,
         },
         {
+            title: 'Submission Controls',
+            href: '/admin/submission-control',
+            icon: ShieldAlert,
+        },
+        {
             title: 'Grades',
             href: '/admin/grades',
             icon: FileSpreadsheet,
@@ -82,6 +90,7 @@ export function AppSidebar() {
         },
     ];
 
+
     const instructorNavItems: NavItem[] = [
         {
             title: 'Dashboard',
@@ -100,7 +109,39 @@ export function AppSidebar() {
         },
     ];
 
-    const mainNavItems = isInstructor ? instructorNavItems : adminNavItems;
+    const studentNavItems: NavItem[] = [
+        {
+            title: 'Dashboard',
+            href: '/student/dashboard',
+            icon: LayoutGrid,
+        },
+        {
+            title: 'My Subjects',
+            href: '/student/subjects',
+            icon: BookOpen,
+        },
+        {
+            title: 'My Grades',
+            href: '/student/grades',
+            icon: FileSpreadsheet,
+        },
+        {
+            title: 'My Ranking',
+            href: '/student/ranking',
+            icon: Trophy,
+        },
+    ];
+
+    let mainNavItems = adminNavItems;
+    let logoHref = '/admin/dashboard';
+
+    if (isStudent) {
+        mainNavItems = studentNavItems;
+        logoHref = '/student/dashboard';
+    } else if (isInstructor) {
+        mainNavItems = instructorNavItems;
+        logoHref = '/instructor/dashboard';
+    }
 
     return (
         <Sidebar collapsible="icon" variant="sidebar">
@@ -108,7 +149,7 @@ export function AppSidebar() {
                 <SidebarMenu>
                     <SidebarMenuItem>
                         <SidebarMenuButton size="lg" asChild>
-                            <Link href={isInstructor ? '/instructor/dashboard' : '/admin/dashboard'} prefetch>
+                            <Link href={logoHref} prefetch>
                                 <AppLogo />
                             </Link>
                         </SidebarMenuButton>

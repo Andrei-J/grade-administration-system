@@ -27,7 +27,7 @@ use Laravel\Fortify\TwoFactorAuthenticatable;
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
  */
-#[Fillable(['name', 'email', 'password', 'role', 'status', 'google_sheet_id', 'sync_status', 'synced_at'])]
+#[Fillable(['name', 'email', 'password', 'role', 'status', 'profile_id', 'google_sheet_id', 'sync_status', 'synced_at'])]
 #[Hidden(['password', 'two_factor_secret', 'two_factor_recovery_codes', 'remember_token'])]
 class User extends Authenticatable implements PasskeyUser
 {
@@ -56,11 +56,31 @@ class User extends Authenticatable implements PasskeyUser
 
     public function isInstructor(): bool
     {
-        return $this->role === 'instructor';
+        return $this->role === 'instructor' || $this->role === 'professor';
+    }
+
+    public function isProfessor(): bool
+    {
+        return $this->isInstructor();
+    }
+
+    public function isStudent(): bool
+    {
+        return $this->role === 'student';
     }
 
     public function isActive(): bool
     {
         return $this->status === 'Active';
+    }
+
+    public function student()
+    {
+        return $this->belongsTo(Student::class, 'profile_id', 'student_id');
+    }
+
+    public function instructor()
+    {
+        return $this->belongsTo(Instructor::class, 'profile_id', 'instructor_id');
     }
 }

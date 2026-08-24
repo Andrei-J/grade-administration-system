@@ -27,4 +27,9 @@ class Instructor extends Model
     {
         return $this->hasMany(Assignment::class, 'instructor_id', 'instructor_id');
     }
+
+    public function user()
+    {
+        return $this->hasOne(User::class, 'profile_id', 'instructor_id');
+    }
 }

@@ -13,6 +13,8 @@ class Section extends Model
         'google_sheet_id',
         'grade_level',
         'section_name',
+        'program',
+        'semester',
         'school_year',
         'status',
         'sync_status',
@@ -22,4 +24,9 @@ class Section extends Model
     protected $casts = [
         'synced_at' => 'datetime',
     ];
+
+    public function subjects()
+    {
+        return $this->belongsToMany(Subject::class, 'section_subjects', 'section_id', 'subject_id', 'section_name', 'subject_code');
+    }
 }
