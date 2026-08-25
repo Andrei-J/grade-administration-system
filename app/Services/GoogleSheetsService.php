@@ -149,8 +149,35 @@ class GoogleSheetsService
     }
 
     /**
+     * Clear all values from a given sheet tab.
+     */
+    public function clearTabValues(string $tabName): bool
+    {
+        if (!$this->isConfigured()) {
+            throw new Exception('Google Sheets API is not configured.');
+        }
+
+        $this->ensureTabExists($tabName);
+
+        try {
+            $range = "'{$tabName}'!A1:Z10000";
+            $clearRequest = new \Google\Service\Sheets\ClearValuesRequest();
+            $this->service->spreadsheets_values->clear(
+                $this->spreadsheetId,
+                $range,
+                $clearRequest
+            );
+
+            return true;
+        } catch (Exception $e) {
+            Log::error("Failed to clear tab {$tabName}: " . $e->getMessage());
+            throw $e;
+        }
+    }
+
+    /**
      * Update or append values in a given tab.
-     * Automatically creates the tab if it does not exist.
+     * Automatically creates the tab if it does not exist and purges existing contents.
      */
     public function writeTabValues(string $tabName, array $rows): bool
     {
@@ -160,6 +187,9 @@ class GoogleSheetsService
 
         // Ensure the destination tab exists before writing
         $this->ensureTabExists($tabName);
+
+        // Clear existing values in tab first to prevent stale leftover rows
+        $this->clearTabValues($tabName);
 
         try {
             $body = new ValueRange([
@@ -182,4 +212,5 @@ class GoogleSheetsService
         }
     }
 }
+
 

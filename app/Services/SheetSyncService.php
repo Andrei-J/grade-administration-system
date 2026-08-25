@@ -11,6 +11,7 @@ use App\Repositories\GradeRepository;
 use App\Repositories\AuditLogRepository;
 use App\Repositories\SyncLogRepository;
 use App\Repositories\UserRepository;
+use App\Repositories\ProgramRepository;
 use Exception;
 use Illuminate\Support\Facades\Log;
 
@@ -27,6 +28,7 @@ class SheetSyncService
         protected AuditLogRepository $auditRepo,
         protected SyncLogRepository $syncLogRepo,
         protected UserRepository $userRepo,
+        protected ProgramRepository $programRepo,
         protected GradeService $gradeService,
         protected LocalExcelSheetService $localExcelSheets
     ) {}
@@ -61,6 +63,8 @@ class SheetSyncService
         try {
             // Pull Users
             $this->pullUsers($summary);
+            // Pull Programs
+            $this->pullPrograms($summary);
             // Pull Students
             $this->pullStudents($summary);
             // Pull Instructors
@@ -153,6 +157,8 @@ class SheetSyncService
         try {
             // Push Users
             $this->pushUsers($summary);
+            // Push Programs
+            $this->pushPrograms($summary);
             // Push Students
             $this->pushStudents($summary);
             // Push Instructors
@@ -167,6 +173,8 @@ class SheetSyncService
             $this->pushGrades($summary);
             // Push Audit Logs
             $this->pushAuditLogs($summary);
+            // Push Admin Audit Logs
+            $this->pushAdminAuditLogs($summary);
 
             if ($this->localExcelSheets->isLocalSheetActive()) {
                 $this->localExcelSheets->generateLocalExcelFile();
@@ -243,13 +251,15 @@ class SheetSyncService
         }
 
         match ($table) {
+            'programs'    => $this->pushPrograms($summary),
             'students'    => $this->pushStudents($summary),
             'instructors' => $this->pushInstructors($summary),
             'subjects'    => $this->pushSubjects($summary),
             'sections'    => $this->pushSections($summary),
             'assignments' => $this->pushAssignments($summary),
             'grades'      => $this->pushGrades($summary),
-            'audit_logs'  => $this->pushAuditLogs($summary),
+            'audit_logs'       => $this->pushAuditLogs($summary),
+            'admin_audit_logs' => $this->pushAdminAuditLogs($summary),
             'users'       => $this->pushUsers($summary),
             default       => Log::warning("pushTable(): unknown table '{$table}'"),
         };
@@ -547,7 +557,6 @@ class SheetSyncService
     protected function pushStudents(array &$summary): void
     {
         $all = $this->studentRepo->getAll();
-        if ($all->isEmpty()) return;
 
         $rows = [
             ['id', 'student_id', 'name', 'grade_level', 'section_id', 'school_year', 'status', 'created_at', 'updated_at']
@@ -577,7 +586,6 @@ class SheetSyncService
     protected function pushInstructors(array &$summary): void
     {
         $all = $this->instructorRepo->getAll();
-        if ($all->isEmpty()) return;
 
         $rows = [
             ['id', 'instructor_id', 'name', 'email', 'status', 'created_at', 'updated_at']
@@ -605,7 +613,6 @@ class SheetSyncService
     protected function pushSubjects(array &$summary): void
     {
         $all = $this->subjectRepo->getAll();
-        if ($all->isEmpty()) return;
 
         $rows = [
             ['id', 'subject_code', 'subject_name', 'description', 'status']
@@ -631,7 +638,6 @@ class SheetSyncService
     protected function pushSections(array &$summary): void
     {
         $all = $this->sectionRepo->getAll();
-        if ($all->isEmpty()) return;
 
         $rows = [
             ['id', 'grade_level', 'section_name', 'school_year', 'status']
@@ -657,7 +663,6 @@ class SheetSyncService
     protected function pushAssignments(array &$summary): void
     {
         $all = $this->assignmentRepo->getAll();
-        if ($all->isEmpty()) return;
 
         $rows = [
             ['id', 'instructor_id', 'subject_id', 'section_id', 'school_year', 'status', 'created_at']
@@ -685,7 +690,6 @@ class SheetSyncService
     protected function pushGrades(array &$summary): void
     {
         $all = $this->gradeRepo->getAll();
-        if ($all->isEmpty()) return;
 
         $rows = [
             ['id', 'student_id', 'subject_id', 'instructor_id', 'section_id', 'school_year', 'prelim', 'midterm', 'final', 'final_average', 'status', 'created_at', 'updated_at']
@@ -719,7 +723,6 @@ class SheetSyncService
     protected function pushAuditLogs(array &$summary): void
     {
         $all = $this->auditRepo->getAll();
-        if ($all->isEmpty()) return;
 
         $rows = [
             ['id', 'user_id', 'role', 'grade_id', 'student_id', 'subject_id', 'action', 'old_prelim', 'new_prelim', 'old_midterm', 'new_midterm', 'old_final', 'new_final', 'old_average', 'new_average', 'ip_address', 'created_at']
@@ -750,6 +753,34 @@ class SheetSyncService
         $this->googleSheets->writeTabValues('audit_logs', $rows);
         foreach ($all as $log) {
             $this->auditRepo->markSynced($log);
+            $summary['Uploaded']++;
+        }
+    }
+
+    protected function pushAdminAuditLogs(array &$summary): void
+    {
+        $all = \App\Models\AdminAuditLog::orderBy('created_at', 'desc')->get();
+
+        $rows = [
+            ['id', 'email', 'user_name', 'role', 'action', 'status', 'details', 'ip_address', 'created_at']
+        ];
+
+        foreach ($all as $log) {
+            $rows[] = [
+                (string)$log->id,
+                $log->email ?? '',
+                $log->user_name ?? '',
+                $log->role ?? '',
+                $log->action ?? '',
+                $log->status ?? '',
+                $log->details ?? '',
+                $log->ip_address ?? '',
+                $log->created_at?->toDateTimeString() ?? '',
+            ];
+        }
+
+        $this->googleSheets->writeTabValues('admin_audit_logs', $rows);
+        foreach ($all as $log) {
             $summary['Uploaded']++;
         }
     }
@@ -825,6 +856,71 @@ class SheetSyncService
             $summary['Uploaded'] += count($users);
         } catch (Exception $e) {
             Log::warning('Push users notice: ' . $e->getMessage());
+        }
+    }
+
+    protected function pullPrograms(array &$summary): void
+    {
+        try {
+            $rows = $this->googleSheets->getTabValues('programs');
+            if (count($rows) <= 1) return;
+
+            $headers = array_map('strtolower', array_map('trim', array_shift($rows)));
+            foreach ($rows as $row) {
+                if (empty(array_filter($row))) continue;
+                $data = $this->mapRowToHeader($headers, $row);
+
+                $code = $data['code'] ?? null;
+                if (!$code) continue;
+
+                $existing = $this->programRepo->findByCode($code);
+                if ($existing) {
+                    $this->programRepo->update($existing, [
+                        'name' => $data['name'] ?? $existing->name,
+                        'description' => $data['description'] ?? $existing->description,
+                        'status' => $data['status'] ?? $existing->status,
+                    ]);
+                    $summary['Updated']++;
+                } else {
+                    $this->programRepo->create([
+                        'code' => $code,
+                        'name' => $data['name'] ?? $code,
+                        'description' => $data['description'] ?? '',
+                        'status' => $data['status'] ?? 'Active',
+                    ]);
+                    $summary['Added']++;
+                }
+            }
+        } catch (Exception $e) {
+            Log::warning('Pull programs notice: ' . $e->getMessage());
+        }
+    }
+
+    protected function pushPrograms(array &$summary): void
+    {
+        $all = $this->programRepo->getAll();
+
+        $rows = [
+            ['id', 'code', 'name', 'description', 'status', 'created_at', 'updated_at']
+        ];
+
+        foreach ($all as $prog) {
+            $rows[] = [
+                (string)$prog->id,
+                $prog->code,
+                $prog->name,
+                $prog->description ?? '',
+                $prog->status,
+                $prog->created_at?->toDateTimeString() ?? '',
+                $prog->updated_at?->toDateTimeString() ?? '',
+            ];
+        }
+
+        try {
+            $this->googleSheets->writeTabValues('programs', $rows);
+            $summary['Uploaded'] += count($all);
+        } catch (Exception $e) {
+            Log::warning('Push programs notice: ' . $e->getMessage());
         }
     }
 

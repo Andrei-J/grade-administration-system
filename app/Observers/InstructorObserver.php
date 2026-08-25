@@ -16,7 +16,7 @@ class InstructorObserver
 
     public function created(Instructor $instructor): void
     {
-        SyncTableToSheetsJob::dispatch('instructors');
+        SyncTableToSheetsJob::dispatchSync('instructors');
     }
 
     public function updating(Instructor $instructor): void
@@ -34,12 +34,12 @@ class InstructorObserver
             return;
         }
 
-        SyncTableToSheetsJob::dispatch('instructors');
+        SyncTableToSheetsJob::dispatchSync('instructors');
     }
 
     public function deleted(Instructor $instructor): void
     {
-        SyncTableToSheetsJob::dispatch('instructors');
+        SyncTableToSheetsJob::dispatchSync('instructors');
     }
 
     private function isSyncOnlyChange(Instructor $instructor): bool

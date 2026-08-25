@@ -57,9 +57,9 @@ class SyncTableToSheetsJob implements ShouldQueue, ShouldBeUnique
 
     public function handle(SheetSyncService $syncService, GoogleSheetsService $sheets): void
     {
-        // Silently skip if Google Sheets is not configured — no credentials yet.
-        if (! $sheets->isConfigured()) {
-            Log::info("SyncTableToSheetsJob({$this->table}): Google Sheets not configured, skipping.");
+        // Silently skip in testing environment or if Google Sheets is not configured — no credentials yet.
+        if (app()->environment('testing') || ! $sheets->isConfigured()) {
+            Log::info("SyncTableToSheetsJob({$this->table}): Skipping in testing environment or when Google Sheets is not configured.");
             return;
         }
 

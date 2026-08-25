@@ -16,7 +16,7 @@ class UserObserver
 
     public function created(User $user): void
     {
-        SyncTableToSheetsJob::dispatch('users');
+        SyncTableToSheetsJob::dispatchSync('users');
     }
 
     public function updating(User $user): void
@@ -34,12 +34,12 @@ class UserObserver
             return;
         }
 
-        SyncTableToSheetsJob::dispatch('users');
+        SyncTableToSheetsJob::dispatchSync('users');
     }
 
     public function deleted(User $user): void
     {
-        SyncTableToSheetsJob::dispatch('users');
+        SyncTableToSheetsJob::dispatchSync('users');
     }
 
     private function isSyncOnlyChange(User $user): bool

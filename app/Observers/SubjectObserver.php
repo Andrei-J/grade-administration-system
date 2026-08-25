@@ -16,7 +16,7 @@ class SubjectObserver
 
     public function created(Subject $subject): void
     {
-        SyncTableToSheetsJob::dispatch('subjects');
+        SyncTableToSheetsJob::dispatchSync('subjects');
     }
 
     public function updating(Subject $subject): void
@@ -34,12 +34,12 @@ class SubjectObserver
             return;
         }
 
-        SyncTableToSheetsJob::dispatch('subjects');
+        SyncTableToSheetsJob::dispatchSync('subjects');
     }
 
     public function deleted(Subject $subject): void
     {
-        SyncTableToSheetsJob::dispatch('subjects');
+        SyncTableToSheetsJob::dispatchSync('subjects');
     }
 
     private function isSyncOnlyChange(Subject $subject): bool

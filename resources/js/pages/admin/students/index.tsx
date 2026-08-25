@@ -33,6 +33,12 @@ interface Section {
     school_year: string;
 }
 
+interface Program {
+    id: number;
+    code: string;
+    name: string;
+}
+
 interface PageProps {
     flash?: {
         success?: string;
@@ -43,6 +49,7 @@ interface PageProps {
 interface Props {
     students: Student[];
     sections: Section[];
+    programs?: Program[];
     filters: {
         search?: string;
         grade_level?: string;
@@ -51,7 +58,7 @@ interface Props {
     };
 }
 
-export default function StudentManagement({ students, sections = [], filters }: Props) {
+export default function StudentManagement({ students, sections = [], programs = [], filters }: Props) {
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [editingStudent, setEditingStudent] = useState<Student | null>(null);
     const { flash } = usePage().props as PageProps;
@@ -61,14 +68,14 @@ export default function StudentManagement({ students, sections = [], filters }: 
     const [selectedGrade, setSelectedGrade] = useState(filters?.grade_level || 'all');
     const [selectedSection, setSelectedSection] = useState(filters?.section || 'all');
 
-    const { data, setData, post, put, processing, errors, reset } = useForm({
+    const { data, setData, post, put, processing, errors, reset, clearErrors } = useForm({
         student_id: '',
         name: '',
         email: '',
         password: '',
         grade_level: '1st Year',
         section: sections[0]?.section_name || '',
-        program: 'BSAIT',
+        program: programs[0]?.code || 'BSAIT',
         semester: '1st Semester',
         school_year: '2026-2027',
         status: 'Active',
@@ -99,15 +106,26 @@ export default function StudentManagement({ students, sections = [], filters }: 
 
     const openCreateModal = () => {
         setEditingStudent(null);
+        clearErrors();
         reset();
-        if (sections.length > 0) {
-            setData('section', sections[0].section_name);
-        }
+        setData({
+            student_id: '',
+            name: '',
+            email: '',
+            password: '',
+            grade_level: '1st Year',
+            section: sections[0]?.section_name || '',
+            program: programs[0]?.code || 'BSAIT',
+            semester: '1st Semester',
+            school_year: '2026-2027',
+            status: 'Active',
+        });
         setIsModalOpen(true);
     };
 
     const openEditModal = (student: Student) => {
         setEditingStudent(student);
+        clearErrors();
         setData({
             student_id: student.student_id,
             name: student.name,
@@ -115,7 +133,7 @@ export default function StudentManagement({ students, sections = [], filters }: 
             password: '',
             grade_level: student.grade_level,
             section: student.section,
-            program: student.program || 'BSAIT',
+            program: student.program || (programs[0]?.code || 'BSAIT'),
             semester: student.semester || '1st Semester',
             school_year: student.school_year,
             status: student.status,
@@ -131,6 +149,9 @@ export default function StudentManagement({ students, sections = [], filters }: 
                     const pageProps = page.props as PageProps;
                     if (!pageProps.flash?.error) {
                         setIsModalOpen(false);
+                        reset();
+                        clearErrors();
+                        setEditingStudent(null);
                     }
                 },
             });
@@ -140,6 +161,9 @@ export default function StudentManagement({ students, sections = [], filters }: 
                     const pageProps = page.props as PageProps;
                     if (!pageProps.flash?.error) {
                         setIsModalOpen(false);
+                        reset();
+                        clearErrors();
+                        setEditingStudent(null);
                     }
                 },
             });
@@ -504,10 +528,18 @@ export default function StudentManagement({ students, sections = [], filters }: 
                                                     className="w-full text-sm bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-slate-900 dark:text-slate-100 rounded-md p-2 mt-1 font-semibold"
                                                     required
                                                 >
-                                                    <option value="BSAIT">BSAIT</option>
-                                                    <option value="BSIT">BSIT</option>
-                                                    <option value="BSCS">BSCS</option>
-                                                    <option value="BSEMC">BSEMC</option>
+                                                    {programs.length === 0 ? (
+                                                        <option value="">No programs configured</option>
+                                                    ) : (
+                                                        programs.map((prog) => (
+                                                            <option key={prog.id} value={prog.code}>
+                                                                {prog.code} - {prog.name}
+                                                            </option>
+                                                        ))
+                                                    )}
+                                                    {data.program && !programs.some((p) => p.code === data.program) && (
+                                                        <option value={data.program}>{data.program}</option>
+                                                    )}
                                                 </select>
                                                 {errors.program && <p className="text-xs text-rose-600 dark:text-rose-400 mt-1">{errors.program}</p>}
                                             </div>

@@ -16,7 +16,7 @@ class AssignmentObserver
 
     public function created(Assignment $assignment): void
     {
-        SyncTableToSheetsJob::dispatch('assignments');
+        SyncTableToSheetsJob::dispatchSync('assignments');
     }
 
     public function updating(Assignment $assignment): void
@@ -34,12 +34,12 @@ class AssignmentObserver
             return;
         }
 
-        SyncTableToSheetsJob::dispatch('assignments');
+        SyncTableToSheetsJob::dispatchSync('assignments');
     }
 
     public function deleted(Assignment $assignment): void
     {
-        SyncTableToSheetsJob::dispatch('assignments');
+        SyncTableToSheetsJob::dispatchSync('assignments');
     }
 
     private function isSyncOnlyChange(Assignment $assignment): bool

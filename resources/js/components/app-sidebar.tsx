@@ -11,6 +11,7 @@ import {
     History,
     RefreshCw,
     ShieldAlert,
+    GraduationCap,
 } from 'lucide-react';
 import AppLogo from '@/components/app-logo';
 import { NavMain } from '@/components/nav-main';
@@ -24,7 +25,7 @@ import {
     SidebarMenuButton,
     SidebarMenuItem,
 } from '@/components/ui/sidebar';
-import type { NavItem, SharedData } from '@/types';
+import type { NavGroup, NavItem, SharedData } from '@/types';
 
 export function AppSidebar() {
     const { auth } = usePage<SharedData>().props;
@@ -32,114 +33,138 @@ export function AppSidebar() {
     const isInstructor = role === 'instructor' || role === 'professor';
     const isStudent = role === 'student';
 
-    const adminNavItems: NavItem[] = [
+    const adminNavGroups: NavGroup[] = [
         {
-            title: 'Dashboard',
-            href: '/admin/dashboard',
-            icon: LayoutGrid,
+            label: 'Platform',
+            items: [
+                {
+                    title: 'Dashboard',
+                    href: '/admin/dashboard',
+                    icon: LayoutGrid,
+                },
+                {
+                    title: 'Programs',
+                    href: '/admin/programs',
+                    icon: GraduationCap,
+                },
+                {
+                    title: 'Students',
+                    href: '/admin/students',
+                    icon: Users,
+                },
+                {
+                    title: 'Instructors',
+                    href: '/admin/instructors',
+                    icon: UserCheck,
+                },
+                {
+                    title: 'Subjects',
+                    href: '/admin/subjects',
+                    icon: BookOpen,
+                },
+                {
+                    title: 'Sections',
+                    href: '/admin/sections',
+                    icon: Layers,
+                },
+                {
+                    title: 'Assignments',
+                    href: '/admin/assignments',
+                    icon: UserPlus,
+                },
+                {
+                    title: 'Grades',
+                    href: '/admin/grades',
+                    icon: FileSpreadsheet,
+                },
+                {
+                    title: 'Rankings',
+                    href: '/admin/rankings',
+                    icon: Trophy,
+                },
+            ],
         },
         {
-            title: 'Students',
-            href: '/admin/students',
-            icon: Users,
-        },
-        {
-            title: 'Instructors',
-            href: '/admin/instructors',
-            icon: UserCheck,
-        },
-        {
-            title: 'Subjects',
-            href: '/admin/subjects',
-            icon: BookOpen,
-        },
-        {
-            title: 'Sections',
-            href: '/admin/sections',
-            icon: Layers,
-        },
-        {
-            title: 'Assignments',
-            href: '/admin/assignments',
-            icon: UserPlus,
-        },
-        {
-            title: 'Submission Controls',
-            href: '/admin/submission-control',
-            icon: ShieldAlert,
-        },
-        {
-            title: 'Grades',
-            href: '/admin/grades',
-            icon: FileSpreadsheet,
-        },
-        {
-            title: 'Rankings',
-            href: '/admin/rankings',
-            icon: Trophy,
-        },
-        {
-            title: 'Audit Logs',
-            href: '/admin/audit-logs',
-            icon: History,
-        },
-        {
-            title: 'Data Sync',
-            href: '/settings/sync',
-            icon: RefreshCw,
-        },
-    ];
-
-
-    const instructorNavItems: NavItem[] = [
-        {
-            title: 'Dashboard',
-            href: '/instructor/dashboard',
-            icon: LayoutGrid,
-        },
-        {
-            title: 'My Classes',
-            href: '/instructor/classes',
-            icon: FileSpreadsheet,
-        },
-        {
-            title: 'Audit Activity',
-            href: '/instructor/audit-activity',
-            icon: History,
+            label: 'System & Controls',
+            items: [
+                {
+                    title: 'Submission Controls',
+                    href: '/admin/submission-control',
+                    icon: ShieldAlert,
+                },
+                {
+                    title: 'Audit Logs',
+                    href: '/admin/audit-logs',
+                    icon: History,
+                },
+                {
+                    title: 'Data Sync',
+                    href: '/settings/sync',
+                    icon: RefreshCw,
+                },
+            ],
         },
     ];
 
-    const studentNavItems: NavItem[] = [
+    const instructorNavGroups: NavGroup[] = [
         {
-            title: 'Dashboard',
-            href: '/student/dashboard',
-            icon: LayoutGrid,
-        },
-        {
-            title: 'My Subjects',
-            href: '/student/subjects',
-            icon: BookOpen,
-        },
-        {
-            title: 'My Grades',
-            href: '/student/grades',
-            icon: FileSpreadsheet,
-        },
-        {
-            title: 'My Ranking',
-            href: '/student/ranking',
-            icon: Trophy,
+            label: 'Faculty Portal',
+            items: [
+                {
+                    title: 'Dashboard',
+                    href: '/instructor/dashboard',
+                    icon: LayoutGrid,
+                },
+                {
+                    title: 'My Classes',
+                    href: '/instructor/classes',
+                    icon: FileSpreadsheet,
+                },
+                {
+                    title: 'Audit Activity',
+                    href: '/instructor/audit-activity',
+                    icon: History,
+                },
+            ],
         },
     ];
 
-    let mainNavItems = adminNavItems;
+    const studentNavGroups: NavGroup[] = [
+        {
+            label: 'Student Portal',
+            items: [
+                {
+                    title: 'Dashboard',
+                    href: '/student/dashboard',
+                    icon: LayoutGrid,
+                },
+                {
+                    title: 'My Subjects',
+                    href: '/student/subjects',
+                    icon: BookOpen,
+                },
+                {
+                    title: 'My Grades',
+                    href: '/student/grades',
+                    icon: FileSpreadsheet,
+                },
+                {
+                    title: 'My Ranking',
+                    href: '/student/ranking',
+                    icon: Trophy,
+                },
+            ],
+        },
+    ];
+
+    let navGroups = adminNavGroups;
     let logoHref = '/admin/dashboard';
 
     if (isStudent) {
-        mainNavItems = studentNavItems;
+        navGroups = studentNavGroups;
         logoHref = '/student/dashboard';
     } else if (isInstructor) {
-        mainNavItems = instructorNavItems;
+        navGroups = instructorNavGroups;
         logoHref = '/instructor/dashboard';
     }
 
@@ -158,7 +183,7 @@ export function AppSidebar() {
             </SidebarHeader>
 
             <SidebarContent>
-                <NavMain items={mainNavItems} />
+                <NavMain groups={navGroups} />
             </SidebarContent>
 
             <SidebarFooter>
@@ -167,3 +192,4 @@ export function AppSidebar() {
         </Sidebar>
     );
 }
+

@@ -23,7 +23,7 @@ class AuditLogController extends Controller
             ->orderBy('created_at', 'desc')
             ->get();
 
-        $accessAttemptLogs = \App\Models\AdminAuditLog::whereIn('action', ['FACULTY_PORTAL_ATTEMPT', 'STUDENT_PORTAL_ACCESS', 'STUDENT_PORTAL_ATTEMPT'])
+        $accessAttemptLogs = \App\Models\AdminAuditLog::whereIn('action', ['FACULTY_PORTAL_ATTEMPT', 'STUDENT_PORTAL_ACCESS', 'STUDENT_PORTAL_ATTEMPT', 'FAILED_LOGIN'])
             ->orderBy('created_at', 'desc')
             ->get();
 

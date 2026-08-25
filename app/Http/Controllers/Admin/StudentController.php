@@ -21,6 +21,7 @@ class StudentController extends Controller
         $filters = $request->only(['search', 'grade_level', 'section', 'school_year']);
         $students = $this->studentRepo->getAll($filters);
         $sections = $this->sectionRepo->getAll();
+        $programs = \App\Models\Program::orderBy('code', 'asc')->get();
 
         $students->transform(function ($student) {
             $user = \App\Models\User::where('profile_id', $student->student_id)->first();
@@ -31,6 +32,7 @@ class StudentController extends Controller
         return Inertia::render('admin/students/index', [
             'students' => $students,
             'sections' => $sections,
+            'programs' => $programs,
             'filters' => $filters,
         ]);
     }

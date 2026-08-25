@@ -1,7 +1,7 @@
 import { Head } from '@inertiajs/react';
 import AppLayout from '@/layouts/app-layout';
 import { BreadcrumbItem } from '@/types';
-import { History, ShieldCheck, ShieldAlert, AlertTriangle, Search, ChevronLeft, ChevronRight } from 'lucide-react';
+import { History, ShieldCheck, ShieldAlert, AlertTriangle, Search, ChevronLeft, ChevronRight, LogOut } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -313,39 +313,65 @@ export default function AuditLogsPage({ logs, adminLogs = [], accessAttemptLogs 
                                                 </td>
                                             </tr>
                                         ) : (
-                                            adminState.paginatedData.map((log) => (
-                                                <tr key={log.id} className="hover:bg-slate-50/50 dark:hover:bg-slate-800/40">
-                                                    <td className="p-3 text-slate-600 dark:text-slate-400 font-mono text-xs whitespace-nowrap">
-                                                        {new Date(log.created_at).toLocaleString()}
-                                                    </td>
-                                                    <td className="p-3">
-                                                        <p className="font-semibold text-slate-900 dark:text-white">{log.user_name || 'Admin User'}</p>
-                                                        <p className="text-xs text-slate-500 dark:text-slate-400 font-mono">{log.email || '—'}</p>
-                                                    </td>
-                                                    <td className="p-3">
-                                                        <span className="inline-flex px-2 py-0.5 rounded text-[10px] font-bold uppercase bg-purple-100 dark:bg-purple-950/80 text-purple-800 dark:text-purple-300">
-                                                            {log.role}
-                                                        </span>
-                                                    </td>
-                                                    <td className="p-3 font-mono text-xs font-bold">
-                                                        <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-blue-50 dark:bg-blue-950/60 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-800">
-                                                            <ShieldCheck className="w-3.5 h-3.5 text-blue-600 shrink-0" />
-                                                            {log.action}
-                                                        </span>
-                                                    </td>
-                                                    <td className="p-3">
-                                                        <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-bold bg-emerald-100 dark:bg-emerald-950/80 text-emerald-800 dark:text-emerald-300">
-                                                            {log.status}
-                                                        </span>
-                                                    </td>
-                                                    <td className="p-3 text-xs text-slate-700 dark:text-slate-300 max-w-xs">
-                                                        {log.details || 'No details specified'}
-                                                    </td>
-                                                    <td className="p-3 text-right font-mono text-slate-400 dark:text-slate-500 text-xs whitespace-nowrap">
-                                                        {log.ip_address || '127.0.0.1'}
-                                                    </td>
-                                                </tr>
-                                            ))
+                                            adminState.paginatedData.map((log) => {
+                                                const isFailed = log.status === 'FAILED' || log.status === 'BLOCKED';
+                                                const isLogout = log.action === 'LOGOUT';
+                                                const isFailedLogin = log.action === 'FAILED_LOGIN';
+
+                                                return (
+                                                    <tr key={log.id} className={isFailed ? "bg-rose-50/30 hover:bg-rose-50/60 dark:bg-rose-950/20 dark:hover:bg-rose-950/40" : "hover:bg-slate-50/50 dark:hover:bg-slate-800/40"}>
+                                                        <td className="p-3 text-slate-600 dark:text-slate-400 font-mono text-xs whitespace-nowrap">
+                                                            {new Date(log.created_at).toLocaleString()}
+                                                        </td>
+                                                        <td className="p-3">
+                                                            <p className="font-semibold text-slate-900 dark:text-white">{log.user_name || 'User'}</p>
+                                                            <p className="text-xs text-slate-500 dark:text-slate-400 font-mono">{log.email || '—'}</p>
+                                                        </td>
+                                                        <td className="p-3">
+                                                            <span className="inline-flex px-2 py-0.5 rounded text-[10px] font-bold uppercase bg-purple-100 dark:bg-purple-950/80 text-purple-800 dark:text-purple-300">
+                                                                {log.role}
+                                                            </span>
+                                                        </td>
+                                                        <td className="p-3 font-mono text-xs font-bold">
+                                                            <span
+                                                                className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-lg border ${
+                                                                    isFailedLogin
+                                                                        ? 'bg-rose-50 dark:bg-rose-950/60 text-rose-700 dark:text-rose-300 border-rose-200 dark:border-rose-800'
+                                                                        : isLogout
+                                                                        ? 'bg-amber-50 dark:bg-amber-950/60 text-amber-800 dark:text-amber-300 border-amber-200 dark:border-amber-800'
+                                                                        : 'bg-blue-50 dark:bg-blue-950/60 text-blue-700 dark:text-blue-300 border-blue-200 dark:border-blue-800'
+                                                                }`}
+                                                            >
+                                                                {isLogout ? (
+                                                                    <LogOut className="w-3.5 h-3.5 text-amber-600 shrink-0" />
+                                                                ) : isFailedLogin ? (
+                                                                    <AlertTriangle className="w-3.5 h-3.5 text-rose-600 shrink-0" />
+                                                                ) : (
+                                                                    <ShieldCheck className="w-3.5 h-3.5 text-blue-600 shrink-0" />
+                                                                )}
+                                                                {log.action}
+                                                            </span>
+                                                        </td>
+                                                        <td className="p-3">
+                                                            <span
+                                                                className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-bold ${
+                                                                    isFailed
+                                                                        ? 'bg-rose-100 dark:bg-rose-950/80 text-rose-800 dark:text-rose-300'
+                                                                        : 'bg-emerald-100 dark:bg-emerald-950/80 text-emerald-800 dark:text-emerald-300'
+                                                                }`}
+                                                            >
+                                                                {log.status}
+                                                            </span>
+                                                        </td>
+                                                        <td className="p-3 text-xs text-slate-700 dark:text-slate-300 max-w-xs">
+                                                            {log.details || 'No details specified'}
+                                                        </td>
+                                                        <td className="p-3 text-right font-mono text-slate-400 dark:text-slate-500 text-xs whitespace-nowrap">
+                                                            {log.ip_address || '127.0.0.1'}
+                                                        </td>
+                                                    </tr>
+                                                );
+                                            })
                                         )}
                                     </tbody>
                                 </table>

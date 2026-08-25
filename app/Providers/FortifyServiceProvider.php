@@ -59,6 +59,7 @@ class FortifyServiceProvider extends ServiceProvider
                         'details'    => 'Student attempted login on Faculty/Admin toggle — Access Denied (Faculty log in only)',
                         'ip_address' => $request->ip(),
                     ]);
+                    $request->attributes->set('admin_audit_log_created', true);
 
                     throw \Illuminate\Validation\ValidationException::withMessages([
                         'email' => ['Faculty log in only! Student accounts are restricted from accessing this portal.'],
@@ -76,6 +77,7 @@ class FortifyServiceProvider extends ServiceProvider
                         'details'    => ucfirst($user->role) . ' attempted login on Student Portal toggle — Access Denied (Student log in only)',
                         'ip_address' => $request->ip(),
                     ]);
+                    $request->attributes->set('admin_audit_log_created', true);
 
                     throw \Illuminate\Validation\ValidationException::withMessages([
                         'email' => ['Student log in only! Faculty and Admin accounts are restricted from accessing this portal.'],
@@ -83,21 +85,19 @@ class FortifyServiceProvider extends ServiceProvider
                 }
 
                 if ($user->status && $user->status !== 'Active') {
-                    throw \Illuminate\Validation\ValidationException::withMessages([
-                        'email' => ['Your account is inactive. Please contact the administrator.'],
-                    ]);
-                }
-
-                // Log normal admin/instructor portal login
-                if ($user->isAdmin() || $user->isInstructor()) {
                     \App\Models\AdminAuditLog::create([
                         'email'      => $user->email,
                         'user_name'  => $user->name,
                         'role'       => $user->role,
-                        'action'     => 'PORTAL_LOGIN',
-                        'status'     => 'SUCCESS',
-                        'details'    => 'Successfully authenticated into ' . ucfirst($user->role) . ' Portal',
+                        'action'     => 'FAILED_LOGIN',
+                        'status'     => 'BLOCKED',
+                        'details'    => 'Account is inactive. Access denied.',
                         'ip_address' => $request->ip(),
+                    ]);
+                    $request->attributes->set('admin_audit_log_created', true);
+
+                    throw \Illuminate\Validation\ValidationException::withMessages([
+                        'email' => ['Your account is inactive. Please contact the administrator.'],
                     ]);
                 }
 

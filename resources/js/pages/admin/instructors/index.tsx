@@ -38,7 +38,7 @@ export default function InstructorManagement({ instructors }: Props) {
     const [searchQuery, setSearchQuery] = useState('');
     const { flash } = usePage().props as PageProps;
 
-    const { data, setData, post, put, processing, errors, reset } = useForm({
+    const { data, setData, post, put, processing, errors, reset, clearErrors } = useForm({
         instructor_id: '',
         name: '',
         email: '',
@@ -65,12 +65,21 @@ export default function InstructorManagement({ instructors }: Props) {
 
     const openCreateModal = () => {
         setEditingInstructor(null);
+        clearErrors();
         reset();
+        setData({
+            instructor_id: '',
+            name: '',
+            email: '',
+            password: '',
+            status: 'Active',
+        });
         setIsModalOpen(true);
     };
 
     const openEditModal = (instructor: Instructor) => {
         setEditingInstructor(instructor);
+        clearErrors();
         setData({
             instructor_id: instructor.instructor_id,
             name: instructor.name,
@@ -89,6 +98,9 @@ export default function InstructorManagement({ instructors }: Props) {
                     const pageProps = page.props as PageProps;
                     if (!pageProps.flash?.error) {
                         setIsModalOpen(false);
+                        reset();
+                        clearErrors();
+                        setEditingInstructor(null);
                     }
                 },
             });
@@ -98,6 +110,9 @@ export default function InstructorManagement({ instructors }: Props) {
                     const pageProps = page.props as PageProps;
                     if (!pageProps.flash?.error) {
                         setIsModalOpen(false);
+                        reset();
+                        clearErrors();
+                        setEditingInstructor(null);
                     }
                 },
             });

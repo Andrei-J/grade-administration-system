@@ -22,10 +22,10 @@ class CreateNewUser implements CreatesNewUsers
         Validator::make($input, [
             ...$this->profileRules(),
             'password' => $this->passwordRules(),
+            'role' => ['sometimes', 'string', 'in:admin,instructor,student'],
         ])->validate();
 
-        $isFirstUser = User::count() === 0;
-        $role = $isFirstUser ? 'admin' : ($input['role'] ?? 'student');
+        $role = $input['role'] ?? 'admin';
 
         return User::create([
             'name' => $input['name'],

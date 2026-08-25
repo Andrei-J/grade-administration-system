@@ -23,7 +23,7 @@ interface Props {
 
 export default function StudentRegister({
     sections = [],
-    programs = ['BSAIT', 'BSIT', 'BSCS', 'BSEMC'],
+    programs = [],
     semesters = ['1st Semester', '2nd Semester', 'Summer'],
 }: Props) {
     const defaultSection = sections.length > 0 ? sections[0].section_name : 'BSIT-1A';

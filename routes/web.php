@@ -15,6 +15,7 @@ use App\Http\Controllers\Admin\GradeController as AdminGradeController;
 use App\Http\Controllers\Admin\RankingController as AdminRankingController;
 use App\Http\Controllers\Admin\AuditLogController as AdminAuditLogController;
 use App\Http\Controllers\Admin\GradeSubmissionControlController as AdminGradeSubmissionControlController;
+use App\Http\Controllers\Admin\ProgramController as AdminProgramController;
 
 
 use App\Http\Controllers\Instructor\DashboardController as InstructorDashboardController;
@@ -57,6 +58,12 @@ Route::middleware(['auth', 'verified'])->group(function () {
 // Admin Routes
 Route::middleware(['auth', 'verified', EnsureRole::class . ':admin'])->prefix('admin')->name('admin.')->group(function () {
     Route::get('/dashboard', [AdminDashboardController::class, 'index'])->name('dashboard');
+
+    // Program Management
+    Route::get('/programs', [AdminProgramController::class, 'index'])->name('programs.index');
+    Route::post('/programs', [AdminProgramController::class, 'store'])->name('programs.store');
+    Route::put('/programs/{id}', [AdminProgramController::class, 'update'])->name('programs.update');
+    Route::delete('/programs/{id}', [AdminProgramController::class, 'destroy'])->name('programs.destroy');
 
     // Student Management
     Route::get('/students', [AdminStudentController::class, 'index'])->name('students.index');

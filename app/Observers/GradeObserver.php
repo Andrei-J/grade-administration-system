@@ -16,7 +16,7 @@ class GradeObserver
 
     public function created(Grade $grade): void
     {
-        SyncTableToSheetsJob::dispatch('grades');
+        SyncTableToSheetsJob::dispatchSync('grades');
     }
 
     public function updating(Grade $grade): void
@@ -34,12 +34,12 @@ class GradeObserver
             return;
         }
 
-        SyncTableToSheetsJob::dispatch('grades');
+        SyncTableToSheetsJob::dispatchSync('grades');
     }
 
     public function deleted(Grade $grade): void
     {
-        SyncTableToSheetsJob::dispatch('grades');
+        SyncTableToSheetsJob::dispatchSync('grades');
     }
 
     private function isSyncOnlyChange(Grade $grade): bool

@@ -16,7 +16,7 @@ class SectionObserver
 
     public function created(Section $section): void
     {
-        SyncTableToSheetsJob::dispatch('sections');
+        SyncTableToSheetsJob::dispatchSync('sections');
     }
 
     public function updating(Section $section): void
@@ -34,12 +34,12 @@ class SectionObserver
             return;
         }
 
-        SyncTableToSheetsJob::dispatch('sections');
+        SyncTableToSheetsJob::dispatchSync('sections');
     }
 
     public function deleted(Section $section): void
     {
-        SyncTableToSheetsJob::dispatch('sections');
+        SyncTableToSheetsJob::dispatchSync('sections');
     }
 
     private function isSyncOnlyChange(Section $section): bool

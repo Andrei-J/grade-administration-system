@@ -16,7 +16,7 @@ class StudentObserver
 
     public function created(Student $student): void
     {
-        SyncTableToSheetsJob::dispatch('students');
+        SyncTableToSheetsJob::dispatchSync('students');
     }
 
     public function updating(Student $student): void
@@ -34,12 +34,12 @@ class StudentObserver
             return;
         }
 
-        SyncTableToSheetsJob::dispatch('students');
+        SyncTableToSheetsJob::dispatchSync('students');
     }
 
     public function deleted(Student $student): void
     {
-        SyncTableToSheetsJob::dispatch('students');
+        SyncTableToSheetsJob::dispatchSync('students');
     }
 
     private function isSyncOnlyChange(Student $student): bool

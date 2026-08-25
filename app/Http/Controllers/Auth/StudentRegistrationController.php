@@ -17,7 +17,8 @@ class StudentRegistrationController extends Controller
     public function create(): Response
     {
         $sections = \App\Models\Section::where('status', 'Active')->get();
-        $programs = ['BSAIT', 'BSIT', 'BSCS', 'BSEMC'];
+        $dbPrograms = \App\Models\Program::where('status', 'Active')->orderBy('code')->pluck('code')->toArray();
+        $programs = !empty($dbPrograms) ? $dbPrograms : ['BSIT', 'BSAIT', 'BSCS', 'BSIS'];
         $semesters = ['1st Semester', '2nd Semester', 'Summer'];
 
         return Inertia::render('auth/student-register', [

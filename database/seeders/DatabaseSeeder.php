@@ -13,14 +13,10 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
-        User::updateOrCreate(
-            ['email' => 'admin@example.com'],
-            [
-                'name' => 'System Administrator',
-                'password' => Hash::make('password'),
-                'role' => 'admin',
-                'status' => 'Active',
-            ]
-        );
+        try {
+            app(\App\Services\SheetSyncService::class)->pushToGoogle();
+        } catch (\Throwable $e) {
+            \Illuminate\Support\Facades\Log::warning('Seeder sheet sync notice: ' . $e->getMessage());
+        }
     }
 }

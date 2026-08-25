@@ -1,3 +1,7 @@
+<?php
+
+namespace App\Http\Controllers\Admin;
+
 use App\Http\Controllers\Controller;
 use App\Repositories\SyncLogRepository;
 use App\Services\GoogleSheetsService;
@@ -22,6 +26,11 @@ class SyncController extends Controller
         $spreadsheetId = $this->googleSheets->getSpreadsheetId();
         $syncLogs = $this->syncLogRepo->getAll(20);
         $lastLog = $syncLogs->first();
+
+        if ($this->localExcelSheets->isLocalSheetActive()) {
+            $this->localExcelSheets->generateLocalExcelFile();
+        }
+
         $localStats = $this->localExcelSheets->getLocalFileStats();
 
         return Inertia::render('settings/sync', [
@@ -83,13 +92,14 @@ class SyncController extends Controller
 
     public function downloadLocalSheet()
     {
+        // Always generate a fresh Excel file with latest DB records before download
+        $this->localExcelSheets->generateLocalExcelFile();
         $path = $this->localExcelSheets->getLocalFilePath();
 
-        if (! file_exists($path)) {
-            $this->localExcelSheets->generateLocalExcelFile();
-        }
-
-        return response()->download($path, 'grade_administration_local_sheets.xlsx');
+        return response()->download($path, 'grade_administration_local_sheets.xlsx', [
+            'Cache-Control' => 'no-cache, no-store, must-revalidate',
+            'Pragma' => 'no-cache',
+            'Expires' => '0',
+        ]);
     }
 }
-

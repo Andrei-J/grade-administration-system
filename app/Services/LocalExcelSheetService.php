@@ -10,6 +10,7 @@ use App\Repositories\InstructorRepository;
 use App\Repositories\SectionRepository;
 use App\Repositories\StudentRepository;
 use App\Repositories\SubjectRepository;
+use App\Repositories\ProgramRepository;
 use Exception;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
@@ -28,7 +29,8 @@ class LocalExcelSheetService
         protected SectionRepository $sectionRepo,
         protected AssignmentRepository $assignmentRepo,
         protected GradeRepository $gradeRepo,
-        protected AuditLogRepository $auditRepo
+        protected AuditLogRepository $auditRepo,
+        protected ProgramRepository $programRepo
     ) {}
 
     public function isLocalSheetActive(): bool
@@ -94,6 +96,23 @@ class LocalExcelSheetService
 
             $spreadsheet = new Spreadsheet();
             $spreadsheet->removeSheetByIndex(0); // Remove default sheet
+
+            // 0. Programs sheet
+            $sheetPrograms = $spreadsheet->createSheet();
+            $sheetPrograms->setTitle('programs');
+            $this->populateSheet($sheetPrograms, [
+                ['id', 'code', 'name', 'description', 'status', 'created_at', 'updated_at']
+            ], $this->programRepo->getAll(), function ($prog) {
+                return [
+                    (string) $prog->id,
+                    $prog->code,
+                    $prog->name,
+                    $prog->description ?? '',
+                    $prog->status,
+                    $prog->created_at?->toDateTimeString() ?? '',
+                    $prog->updated_at?->toDateTimeString() ?? '',
+                ];
+            });
 
             // 1. Students sheet
             $sheetStudents = $spreadsheet->createSheet();
@@ -228,7 +247,26 @@ class LocalExcelSheetService
                 ];
             });
 
-            // 8. Users sheet
+            // 8. Admin audit logs sheet
+            $sheetAdminAudit = $spreadsheet->createSheet();
+            $sheetAdminAudit->setTitle('admin_audit_logs');
+            $this->populateSheet($sheetAdminAudit, [
+                ['id', 'email', 'user_name', 'role', 'action', 'status', 'details', 'ip_address', 'created_at']
+            ], \App\Models\AdminAuditLog::orderBy('created_at', 'desc')->get(), function ($log) {
+                return [
+                    (string) $log->id,
+                    $log->email ?? '',
+                    $log->user_name ?? '',
+                    $log->role ?? '',
+                    $log->action ?? '',
+                    $log->status ?? '',
+                    $log->details ?? '',
+                    $log->ip_address ?? '',
+                    $log->created_at?->toDateTimeString() ?? '',
+                ];
+            });
+
+            // 9. Users sheet
             $sheetUsers = $spreadsheet->createSheet();
             $sheetUsers->setTitle('users');
             $this->populateSheet($sheetUsers, [
