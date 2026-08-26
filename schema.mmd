@@ -1,0 +1,291 @@
+erDiagram
+
+    %% ─────────────── LARAVEL SYSTEM TABLES ───────────────
+
+    cache {
+        string key PK
+        mediumtext value
+        int expiration
+    }
+
+    cache_locks {
+        string key PK
+        string owner
+        int expiration
+    }
+
+    failed_jobs {
+        bigint id PK
+        string uuid UK
+        text connection
+        text queue
+        longtext payload
+        longtext exception
+        timestamp failed_at
+    }
+
+    jobs {
+        bigint id PK
+        string queue
+        longtext payload
+        tinyint attempts
+        int reserved_at
+        int available_at
+        int created_at
+    }
+
+    job_batches {
+        string id PK
+        string name
+        int total_jobs
+        int pending_jobs
+        int failed_jobs
+        longtext failed_job_ids
+        mediumtext options
+        int cancelled_at
+        int created_at
+        int finished_at
+    }
+
+    migrations {
+        int id PK
+        string migration
+        int batch
+    }
+
+    password_reset_tokens {
+        string email PK
+        string token
+        timestamp created_at
+    }
+
+    sessions {
+        string id PK
+        bigint user_id FK
+        string ip_address
+        text user_agent
+        longtext payload
+        int last_activity
+    }
+
+    %% ─────────────── AUTH TABLE ───────────────
+
+    users {
+        bigint id PK
+        string name
+        string email UK
+        timestamp email_verified_at
+        string password
+        text two_factor_secret
+        text two_factor_recovery_codes
+        timestamp two_factor_confirmed_at
+        string remember_token
+        timestamp created_at
+        timestamp updated_at
+    }
+
+    %% ─────────────── STUDENT TABLES ───────────────
+
+    tbl_student_info {
+        string LIBRARY_ID PK
+        string STUDENT_RFID_NUMBER
+        string STUDENT_NUMBER
+        string FN
+        string MN
+        string LN
+        string SEX
+        string BIRTHDAY
+        string CONTACT_NUMBER
+        string EMAIL
+        tinyint QR_SENT
+        string PIC
+        string COURSE
+        string ADDRESS
+        date REGISTERED_ON
+        date RENEW_ON
+        string ID_STATUS
+        date ID_STATUS_DATE
+        json FACE_EMBEDDING
+    }
+
+    tbl_student_logs {
+        bigint id PK
+        string LIBRARY_ID FK
+        time LOG_TIME
+        date LOG_DATE
+        string LOG_SESSION
+        string LOG_IMAGE
+    }
+
+    tbl_access_attempts {
+        bigint id PK
+        string LIBRARY_ID FK
+        enum STATUS
+        string IMAGE_PATH
+        string ATTEMPT_TYPE
+        date LOG_DATE
+        time LOG_TIME
+        timestamp created_at
+        timestamp updated_at
+    }
+
+    %% ─────────────── LOCKER / DEPOSITORY TABLES ───────────────
+
+    tbl_rfid_info {
+        string RFID_NUMBER PK
+        int LOCKER_NUMBER
+        string IS_AVAILABLE
+    }
+
+    tbl_rfidhistory {
+        bigint id PK
+        string RFID_CARD_NUMBER FK
+        string LIBRARY_ID FK
+        datetime BORROW_ON
+        datetime RETURN_ON
+        string LOCKER_NUMBER
+        string EMP_ID FK
+    }
+
+    %% ─────────────── REPORTS / COMMUNICATION ───────────────
+
+    tbl_lost_id_reports {
+        bigint id PK
+        string old_library_id
+        string new_library_id
+        string student_number
+        string location_lost
+        text description
+        string affidavit_path
+        bigint processed_by FK
+        timestamp created_at
+        timestamp updated_at
+    }
+
+    email_messages {
+        bigint id PK
+        string library_id FK
+        string subject
+        longtext body
+        string attachments
+        string sent_to
+        tinyint is_read
+        timestamp created_at
+        timestamp updated_at
+    }
+
+    %% ─────────────── SURVEY TABLES ───────────────
+
+    surveys {
+        bigint id PK
+        string title
+        text description
+        enum status
+        bigint created_by FK
+        timestamp created_at
+        timestamp updated_at
+    }
+
+    survey_questions {
+        bigint id PK
+        bigint survey_id FK
+        int order
+        enum type
+        text label
+        json options
+        tinyint required
+        timestamp created_at
+        timestamp updated_at
+    }
+
+    survey_responses {
+        bigint id PK
+        bigint survey_id FK
+        string respondent_name
+        string respondent_email
+        json answers
+        timestamp submitted_at
+    }
+
+    %% ─────────────── CONFIGURATION TABLES ───────────────
+
+    tbl_sensitivity_thresholds {
+        bigint id PK
+        string key UK
+        decimal value
+        string description
+        timestamp created_at
+        timestamp updated_at
+    }
+
+    tbl_settings {
+        bigint id PK
+        string key UK
+        text value
+        string description
+        timestamp created_at
+        timestamp updated_at
+    }
+
+    %% ─────────────── AUDIT / LOGGING TABLES ───────────────
+
+    audit_trails {
+        bigint id PK
+        bigint user_id FK
+        string user_name
+        string auditable_type
+        string auditable_id
+        string event
+        text activity
+        string ip_address
+        json old_values
+        json new_values
+        timestamp created_at
+    }
+
+    %% ─────────────── CALENDAR / NOTES TABLES ───────────────
+
+    calendar_notes {
+        bigint id PK
+        date date
+        time time
+        text note
+        timestamp created_at
+        timestamp updated_at
+    }
+
+    %% ─────────────── AI CHAT TABLES ───────────────
+
+    chats {
+        bigint id PK
+        bigint user_id FK
+        string title
+        timestamp created_at
+        timestamp updated_at
+    }
+
+    chat_messages {
+        bigint id PK
+        bigint chat_id FK
+        enum role
+        text content
+        timestamp created_at
+        timestamp updated_at
+    }
+
+    %% ─────────────── RELATIONSHIPS ───────────────
+
+    users ||--o{ sessions : "has"
+    tbl_student_info ||--o{ tbl_student_logs : "has"
+    tbl_student_info ||--o{ tbl_access_attempts : "has"
+    tbl_student_info ||--o{ tbl_rfidhistory : "borrows"
+    tbl_rfid_info ||--o{ tbl_rfidhistory : "tracks"
+    users ||--o{ tbl_rfidhistory : "issued_by"
+    users ||--o{ tbl_lost_id_reports : "processed_by"
+    tbl_student_info ||--o{ email_messages : "received_by"
+    users ||--o{ surveys : "created_by"
+    surveys ||--o{ survey_questions : "contains"
+    surveys ||--o{ survey_responses : "receives"
+    users ||--o{ audit_trails : "performed_by"
+    users ||--o{ chats : "owns"
+    chats ||--o{ chat_messages : "contains"

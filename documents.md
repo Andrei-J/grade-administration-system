@@ -62,7 +62,13 @@ The system follows a modern multi-tier model combining a **Laravel Framework (PH
 
 > **Copy & Paste this prompt into Canva AI (Magic Design / Whimsical / Canva Elements / Napkin AI):**
 >
-> `"Create a clean, modern tech flowchart diagram for an Academic Grade Administration System named Online CyberGrade. Use a sleek dark blue, teal, and slate gray color palette. Show 5 main sequential blocks with arrows: 1. User Authentication (Instructor & Admin Login with Passkey/2FA), 2. Grade Entry Module (Instructors input Prelim, Midterm, and Final scores), 3. Excel Processing Engine (Automated computation of Final Average using weighted formulas), 4. CyberGrade Security & Audit Layer (Writes changes to Audit Log and calculates Class Ranking using RANK.EQ logic), 5. Data Sync & View Layer (Bi-directional sync to Google Sheets and Student Grade Portal). Include clean icons for each step (Lock, Edit, Calculator, Shield, Chart)."`
+> `"Design a high-resolution, modern tech process infographic titled 'ONLINE CYBERGRADE' with subtitle 'Academic Grade Administration System'. Structure the layout as a horizontal 5-stage timeline process connected by a thin navy line with a rightward arrow. Include a dark navy top border accent and a solid navy footer bar at the bottom with white angled stripe accents. Display 5 vertically oriented, rounded white card containers with distinct colored header badges and bottom accent bars:
+> - Node 01 (Header Navy `#1B365D`, Badge '01'): Title 'USER AUTH' in bold navy sans-serif. Body text: 'Instructor & Admin Login with Passkey / 2FA secure authentication portal.' Include a lock or keyhole icon.
+> - Node 02 (Header Teal `#1E888B`, Badge '02'): Title 'GRADE ENTRY' in bold teal. Body text: 'Instructors input Prelim, Midterm, and Final scores per student.' Include an edit document icon.
+> - Node 03 (Header Olive `#659333`, Badge '03'): Title 'EXCEL ENGINE' in bold green. Body text: 'Automated computation of Final Average using weighted formulas and Excel Processing Engine.' Include a calculator/spreadsheet icon.
+> - Node 04 (Header Amber `#E5A100`, Badge '04'): Title 'SECURITY & AUDIT' in bold yellow-gold. Body text: 'Writes changes to Audit Log and calculates Class Ranking using RANK.EQ logic.' Include a shield and trophy icon.
+> - Node 05 (Header Crimson `#D9252A`, Badge '05'): Title 'DATA SYNC & VIEW' in bold red. Body text: 'Bi-directional sync to Google Sheets and Student Grade Portal for real-time viewing.' Include a cloud sync and chart icon.
+> Use crisp typography (Inter/Montserrat), clean drop shadows, and high contrast against a clean white background."`
 
 ---
 
@@ -222,7 +228,11 @@ Tracks external Google Sheets synchronization status.
 
 > **Copy & Paste this prompt into Canva AI / Eraser.io / Draw.io / Mermaid:**
 >
-> `"Create a professional Entity Relationship Diagram (ERD) for a Grade Administration Database. Structure 6 primary entity cards: USERS, STUDENTS, INSTRUCTORS, SUBJECTS, GRADES, and AUDIT_LOGS. Show 1-to-Many relationships connecting Instructors to Assignments, Students to Grades, Subjects to Grades, and Users to Audit Logs. Use clean card boxes with entity attribute listings, primary key indicators (PK), and foreign key indicators (FK). Color code entities: User/Auth tables in Soft Cyan, Academic Core tables in Royal Blue, and Log/Audit tables in Muted Slate."`
+> `"Create a highly detailed, technical Entity Relationship Diagram (ERD) titled 'ONLINE CYBERGRADE - Database ERD & Relational Schema Architecture'. Layout 9 database entity cards in 3 organized vertical layers:
+> 1. Auth & Core Layer (Top Row): USERS (PK: id, email, role, profile_id, two_factor_secret), STUDENTS (PK: id, FK/Unique: student_id, name, grade_level, section, school_year, status, google_sheet_id, sync_status), INSTRUCTORS (PK: id, FK/Unique: instructor_id, name, email, status, google_sheet_id, sync_status). Color code: Soft Blue `#3B82F6`.
+> 2. Academic Core Layer (Middle Row): SUBJECTS (PK: id, FK/Unique: subject_code, subject_name, password lock key), SECTIONS (PK: id, section_name, grade_level, school_year), ASSIGNMENTS (PK: id, FK: instructor_id, FK: subject_id, FK: section_id, school_year), GRADES (PK: id, FK: student_id, FK: subject_id, FK: instructor_id, section_id, prelim, midterm, final, final_average, status). Color code: Royal Blue `#1E3A8A`.
+> 3. Operations & Audit Layer (Bottom Row): AUDIT_LOGS (PK: id, user_id, user_name, role, action, old_prelim, new_prelim, old_midterm, new_midterm, old_final, new_final, old_average, new_average, ip_address), SYNC_LOGS (PK: id, direction, record_type, status, records_count, details, error_message). Color code: Amber Slate `#D97706`.
+> Connect entities with 1-to-Many crow's foot connector lines: INSTRUCTORS (1:N) ASSIGNMENTS, SUBJECTS (1:N) ASSIGNMENTS, SECTIONS (1:N) ASSIGNMENTS, STUDENTS (1:N) GRADES, SUBJECTS (1:N) GRADES, USERS (1:N) AUDIT_LOGS. Display PK and FK indicators next to field names in bold badge tags."`
 
 ---
 
@@ -264,7 +274,15 @@ CyberGrade enforces strict role separation so users can only access endpoints an
 
 > **Copy & Paste this prompt into Canva AI / Magic Design:**
 >
-> `"Create an infographic illustrating a 4-Tier Security Architecture for a Secure Role-Based Grade Administration System. Segment into 4 horizontal layers: 1. Identity & Authentication Tier (Passkey WebAuthn + 2FA TOTP), 2. Role-Based Access Control Layer (Permissions grid for Admin, Dean, Instructor, Student), 3. Data Protection & Verification Layer (Subject Password Lock & Weighted Grade Engine), 4. Audit & Compliance Layer (Tamper-proof Audit Log recording IP, User ID, and Grade Diffs). Use cybersecurity visual elements like shields, locks, keycards, and audit badges in dark obsidian, gold, and sapphire colors."`
+> `"Design an enterprise cybersecurity infographic titled 'ONLINE CYBERGRADE - 4-Tier Security & RBAC Architecture'. Use a dark obsidian background with metallic gold and sapphire blue accents. Segment into 4 stacked horizontal container layers with glowing neon dividers:
+> - Layer 1 (Multi-Factor Identity & Auth Tier): FIDO2/WebAuthn Hardware Passkeys (Biometrics, YubiKeys), TOTP Authenticator Apps (Google/Authy 2FA), BCrypt Password Hashing, CSRF Token & Session Guards. Icon: Biometric Fingerprint & Shield.
+> - Layer 2 (Role-Based Access Control - RBAC Tier): 4 User Role Badge Cards:
+>   * ADMIN: User Provisioning, System Config, Full Audit Log Access, Sheet Sync Trigger.
+>   * DEAN / DEPT HEAD: Department Class Ranking, Grade Sheet Approval, Read-Only Audit History.
+>   * INSTRUCTOR: Raw Score Entry (Prelim, Midterm, Final), Passcode Unlock Verification.
+>   * STUDENT: Read-Only Personal Grade Card, Transmuted GPA Score, Class Section Rank.
+> - Layer 3 (Data Protection & Verification Tier): Subject Passcode Verification (Requires secret subject password before submitting final marks), Automated Excel Formula Calculation Engine, PDO Parameterized Queries (SQL Injection Prevention), XSS Input Sanitization. Icon: Keyhole Lock & Spreadsheet.
+> - Layer 4 (Tamper-Evident Audit & Compliance Tier): Real-Time Audit Logger capturing User ID, User Name, Role, Action Type, IP Address, Timestamp, and Exact Score Diffs (old_prelim -> new_prelim, old_average -> new_average). Icon: Immutable Ledger & Clock."`
 
 ---
 
@@ -350,7 +368,11 @@ Convert raw numerical percentage averages (`F2`) to standard GPA / Letter Scale:
 
 > **Copy & Paste this prompt into Canva AI:**
 >
-> `"Create a clean mathematical process infographic showing how grades are computed from raw components to final mark. Display 4 step-by-step calculation cards connected by arrows: Step 1: Raw Scores Input (Prelim 30%, Midterm 30%, Final 40%), Step 2: Excel Weighted Formula Execution [=(C2*0.3)+(D2*0.3)+(E2*0.4)], Step 3: Transmutation Scale Lookup (Mapping percentage to GPA scale using IFS formula), Step 4: Final Output (Displaying Final Grade, Letter Mark, and Pass/Fail Status Badge). Use vibrant colors green for pass, orange for pending, blue for calculations."`
+> `"Create a mathematical process infographic titled 'ONLINE CYBERGRADE - Automated Grade Computation Pipeline'. Structure as 4 sequential calculation step cards connected by directional workflow arrows against a sleek light gray canvas:
+> - Step 1: Raw Scores Input Card (Header Blue `#2563EB`). Fields: Prelim (30% weight), Midterm (30% weight), Final (40% weight). Score range validation: 0.00 - 100.00.
+> - Step 2: Excel Calculation Engine Card (Header Indigo `#4F46E5`). Displays active formula code boxes: Weighted Addition: `=(C2*0.30) + (D2*0.30) + (E2*0.40)` | Excel SUMPRODUCT: `=SUMPRODUCT(C2:E2, $C$1:$E$1)` | Missing Score Guard: `=IF(COUNTA(C2:E2)=0, "Pending", ROUND(SUM(C2:E2)/COUNTA(C2:E2), 2))`.
+> - Step 3: Grade Transmutation & GPA Lookup Card (Header Teal `#0D9488`). Displays IFS formula mapping table: 97-100% -> 1.00 (A+), 93-96% -> 1.25 (A), 89-92% -> 1.50 (A-), 85-88% -> 1.75 (B+), 80-84% -> 2.00 (B), 75-79% -> 2.50 (C), 70-74% -> 3.00 (D), <70% -> 5.00 (F). Formula box: `=IFS(F2>=97, 1.00, F2>=93, 1.25, ..., TRUE, 5.00)`.
+> - Step 4: Final Evaluation & Status Output Card (Header Dark Slate `#1E293B`). Displays computed Final Average, GPA mark, and status badge using `=IF(F2>=75, "PASSED", "FAILED")`. Include vibrant Green badge for PASSED, Red badge for FAILED, Yellow badge for PENDING."`
 
 ---
 
@@ -407,7 +429,12 @@ To compute a student's total GWA across multiple subjects with different unit we
 
 > **Copy & Paste this prompt into Canva AI:**
 >
-> `"Create a clean leaderboard and ranking workflow diagram for an educational system. Illustrate how grades flow into ranking calculation: 1. Student Final Averages input column, 2. Sorting & RANK.EQ evaluation engine, 3. Tie-breaking rule engine (Secondary evaluation via Final Exam score), 4. Top 10 Honors Leaderboard output display card with Gold (1st), Silver (2nd), and Bronze (3rd) badges. Design with modern dark mode aesthetic, vibrant gold accents, clean line connections."`
+> `"Design an academic leaderboard and ranking logic infographic titled 'ONLINE CYBERGRADE - Dynamic Ranking & Tie-Breaking Engine'. Use a dark theme with vibrant gold, silver, and bronze metallic accents. Display 5 connected processing cards:
+> - Card 1 (Grade Data Extraction): Class Final Averages column input range `$F$2:$F$51`. Icon: Data Table.
+> - Card 2 (Standard Competition Ranking): Displays formula `=RANK.EQ(F2, $F$2:$F$51, 0)`. Assigns initial rank positions (1st, 2nd, 3rd...) in descending order. Icon: Sorting Arrows.
+> - Card 3 (Automated Tie-Breaking Logic): Handles identical final average ties using secondary Final Exam score metric. Formula box: `=RANK.EQ(F2, $F$2:$F$51, 0) + COUNTIFS($F$2:$F$51, F2, $E$2:$E$51, ">"&E2)`. Icon: Scale/Balance.
+> - Card 4 (Honors List Extraction Array): Dynamic formula box: `=CHOOSEROWS(SORT(FILTER(A2:F51, F2:F51>=90), 6, -1), SEQUENCE(MIN(10, COUNTA(FILTER(A2:A51, F2:F51>=90)))))`. Icon: Filter/Star.
+> - Card 5 (Top 10 Leaderboard Presentation): Output card showing 🥇 1st Place (Gold Badge), 🥈 2nd Place (Silver Badge), 🥉 3rd Place (Bronze Badge), and Dean's Honor Roll listing. Include star icons and glowing trophy visuals."`
 
 ---
 
@@ -452,7 +479,12 @@ Key System Highlights:
 
 > **Copy & Paste this prompt into Canva AI / Magic Design:**
 >
-> `"Create a full-page master sitemap and system architecture infographic for CyberGrade Administration System. Show 4 main quadrant columns: 1. User Roles & Auth (Admin, Dean, Instructor, Student cards with 2FA/Passkey badges), 2. Core Functional Modules (Grade Entry, Excel Formula Engine, Dynamic Ranking, Audit Logs), 3. Data Processing & Storage (MySQL Database tables and Google Sheets API sync), 4. Output Deliverables (Student Grade Report Card, Class Leaderboard, Audit History Report). Use futuristic tech lines, glowing blue and indigo gradients, crisp white typography, and professional feature icons."`
+> `"Design a comprehensive 4-Quadrant System Architecture Overview Infographic titled 'ONLINE CYBERGRADE - Master System Architecture & Data Flow Diagram'. Use a 2x2 grid layout connected by a central hub circle labeled 'CyberGrade Core System Hub' with glowing blue interconnect arrows:
+> - Quadrant 1 (Top-Left: Presentation & Auth Layer): Vue 3 / Inertia.js Web UI, FIDO2/WebAuthn Passkeys, 2FA TOTP Engine, Role Dashboards (Admin, Dean, Instructor, Student). Theme: Soft Blue `#2563EB`.
+> - Quadrant 2 (Top-Right: Core Processing Engine): Laravel 11 Backend API, Excel Formula Execution Module (`SUMPRODUCT`, `IFS`, `ROUND`), Security Subject Passcode Lock, Audit Trail Logger, `RANK.EQ` Ranking Engine. Theme: Deep Sapphire `#1E3A8A`.
+> - Quadrant 3 (Bottom-Left: Storage & Cloud Integration): MySQL Database (9 Relational Tables: users, students, instructors, subjects, sections, assignments, grades, audit_logs, sync_logs), Google Sheets API v4 Bi-directional Sync Service. Theme: Teal `#0D9488`.
+> - Quadrant 4 (Bottom-Right: Analytics & Output Deliverables): Real-Time Student Grade Cards, Section & Department Leaderboards, System Audit History Log Reports, Exported Cloud Spreadsheets. Theme: Dark Slate `#0F172A`.
+> Include professional tech vector icons, crisp white typography, clear data direction arrows, and a clean professional legend."`
 
 ---
 
@@ -460,12 +492,13 @@ Key System Highlights:
 
 For quick copying, here is the complete reference list of diagram prompts ready for Canva:
 
-1. **System Flowchart Prompt**: Section 1.3
-2. **Database ERD Prompt**: Section 2.3
-3. **Security Architecture & RBAC Prompt**: Section 3.3
-4. **Grade Calculation Pipeline Prompt**: Section 4.3
-5. **Ranking Engine Flowchart Prompt**: Section 5.2
-6. **Master System Overview Prompt**: Section 6.3
+1. **System Process Flowchart Prompt (5-Stage Timeline)**: [Section 1.3](file:///c:/Users/Jeffrey/Herd/grade-administration-system/documents.md#L61)
+2. **Database ERD Architecture Prompt (9 Tables & FK Matrix)**: [Section 2.3](file:///c:/Users/Jeffrey/Herd/grade-administration-system/documents.md#L221)
+3. **Security Architecture & RBAC Prompt (4-Tier Layered Stack)**: [Section 3.3](file:///c:/Users/Jeffrey/Herd/grade-administration-system/documents.md#L263)
+4. **Grade Computation Pipeline Prompt (4-Step Formula Flow)**: [Section 4.3](file:///c:/Users/Jeffrey/Herd/grade-administration-system/documents.md#L349)
+5. **Ranking Engine Flowchart Prompt (Dynamic Leaderboard & Tie-Breaker)**: [Section 5.2](file:///c:/Users/Jeffrey/Herd/grade-administration-system/documents.md#L406)
+6. **Master System Architecture Overview Prompt (4-Quadrant Grid)**: [Section 6.3](file:///c:/Users/Jeffrey/Herd/grade-administration-system/documents.md#L451)
 
 ---
-*Document Version: 1.0.0 | System: Online CyberGrade Administration & Ranking Engine*
+*Document Version: 1.1.0 | System: Online CyberGrade Administration & Ranking Engine*
+
